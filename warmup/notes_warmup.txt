@@ -1,0 +1,12 @@
+data : /cloud/wwu1/o_labeling/cvmlfs/data/animal_welfare/warm_up
+copied to :
+/scratch/tmp/kwundram/bcth/data/warmup_data
+
+
+-----------------------
+code : /home/k/kwundram/bcth/warmup
+
+
+
+
+
