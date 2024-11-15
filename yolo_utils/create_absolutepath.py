@@ -21,15 +21,17 @@ def list_png_paths(folder_path, output_file_path):
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--main_folder_path', type=str, required=True, help='Pfad zum Ordner mit Projektordnern')
+    parser.add_argument('--main_folder_path', type=str, required=True, help='path to folder with subfolders of images')
     
     # parse arguments
     args = parser.parse_args()
     # main folder set
     main_folder_path = args.main_folder_path
+    # Text file paths : train, val
     output_file_path = os.path.join(main_folder_path, "all_paths.txt")
-    train_file = os.path.join(main_folder_path, "insects_train.txt")
-    val_file =  os.path.join(main_folder_path, "insects_val.txt")
+    train_file = os.path.join(main_folder_path, "train.txt")
+    val_file =  os.path.join(main_folder_path, "val.txt")
+    test_file =  os.path.join(main_folder_path, "test.txt")
     
     # remove png_list if it already exists
     if os.path.exists(output_file_path):
@@ -55,7 +57,8 @@ if __name__ == "__main__":
     with open( output_file_path, "r") as all_paths_list:
         all_lines= all_paths_list.readlines()
         # data partition
-        train_set, val_set = train_test_split(all_lines, test_size=0.2, random_state=42)
+        train_set, val_set = train_test_split(all_lines, test_size=0.3, random_state=42)
+        val_set, test_set = train_test_split(val_set, test_size=0.5, random_state=42)
         
         #training data
         with open( train_file, "w") as train_f:
@@ -65,5 +68,8 @@ if __name__ == "__main__":
         with open( val_file, "w") as val_f:
             val_f.write("".join(val_set))
         val_f.close()
+        with open( test_file, "w") as test_f:
+            test_f.write("".join(test_set))
+        test_f.close()
         
     all_paths_list.close()

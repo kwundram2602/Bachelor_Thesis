@@ -53,10 +53,7 @@ def change_classID(labels_folder:str,old_index:int,new_index:int):
             file.writelines(modified_lines)
             print("written...")
             file.close()
-                
-                
-            
-            
+                      
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--labels_folder', type=str, required=True, help='path to folder')

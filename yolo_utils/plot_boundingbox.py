@@ -17,8 +17,6 @@ def plot_bbox_to_image(image_path,label_path):
         # Split string to float
         _, x, y, w, h = map(float, dt.split(' '))
 
-        # Taken from https://github.com/pjreddie/darknet/blob/810d7f797bdb2f021dbe65d2524c2ff6b8ab5c8b/src/image.c#L283-L291
-        # via https://stackoverflow.com/questions/44544471/how-to-get-the-coordinates-of-the-bounding-box-in-yolo-object-detection#comment102178409_44592380
         l = int((x - w / 2) * dw)
         r = int((x + w / 2) * dw)
         t = int((y - h / 2) * dh)
