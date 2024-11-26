@@ -1,5 +1,6 @@
 import os
 import argparse
+# functions to change labels in txt files.
 
 def delete_classes(labels_folder:str,class_index:int):
     """
