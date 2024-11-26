@@ -3,3 +3,5 @@
 *.pt
 bcth_log.txt
 notes_bcth.txt
+/local_shell
+/video_utils/copy_files.py

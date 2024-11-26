@@ -3,7 +3,13 @@ import matplotlib.pyplot as plt
 import argparse
 
 
-def plot_bbox_to_image(image_path,label_path):
+def plot_bbox_to_image(image_path:str,label_path:str):
+    """
+    Plots bounding box from coordinates in label file to image using opencv and matplotlib.
+
+    :param image_path: Path to image.
+    :param label_path: Path to label text file.
+    """
     
     img = cv2.imread(image_path)
     dh, dw, _ = img.shape
