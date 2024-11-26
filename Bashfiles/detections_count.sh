@@ -5,7 +5,8 @@
 
 #SBATCH --tasks-per-node=8
 
-#SBATCH --partition=express
+#SBATCH --partition=normal
+# try normal, express
 
 #SBATCH --mem=20GB
 
