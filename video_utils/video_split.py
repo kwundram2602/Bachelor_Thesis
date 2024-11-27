@@ -1,7 +1,7 @@
 import sys, subprocess, datetime, argparse, math
-from moviepy.editor import VideoFileClip
+#from moviepy.editor import VideoFileClip
 import os
-import cv2
+#import cv2
 def convert_to_frame_count_consistency(input_mp4:str,output_mp4:str):
     """
     Converts video so frame count consistency is guaranteed
@@ -20,9 +20,9 @@ def get_video_duration(video_path:str):
     :param video_path: Path to mp4 file.
     :return duration of video in seconds
     """
-    duration = VideoFileClip(video_path).duration
-    print(f"video is {duration} seconds long")
-    return duration
+    #duration = VideoFileClip(video_path).duration
+    #print(f"video is {duration} seconds long")
+    #return duration
 
 ##accepts interval in seconds
 ##accepts video_path as .mp4 file
@@ -101,6 +101,6 @@ if __name__ == '__main__':
     parser.add_argument('--interval',required=False, type=int, help='duration in seconds for each split ')
     args = parser.parse_args()
     
-    #convert_to_frame_count_consistency(args.video_path,args.convert_output)
+    convert_to_frame_count_consistency(args.video_path,args.convert_output)
     #get_video_duration(args.video_path)
-    time_split(args.video_path, args.interval)
+    #time_split(args.video_path, args.interval)

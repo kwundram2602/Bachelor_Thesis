@@ -20,14 +20,15 @@
 module purge
 module load palma/2022a  GCCcore/11.3.0 FFmpeg/4.4.2
 
-data="$WORK"/bcth/data/warmup_data
-batch=batch1_day2_1753_1805
-#batch=batch3_day7_1829_1847.mp4
-video_path="$data"/$batch.mp4
-output="$data"/extracted_images/$batch
+video=B1D1_C1_ST_c
+# mp4 folder
+video_path=/scratch/tmp/kwundram/bcth/data/whole_data/converted/Batch1/B1D1/$video.mp4
+#output folder
+output=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/Batch1/B1D1/$video/
+
 yolo_utils=/home/k/kwundram/bcth/Bachelor_Thesis/yolo_utils/
 # creates output path if it doesnt exist
 python $yolo_utils/create_path.py --path $output
 
-#sbatch $HOME/bcth/Bachelor_Thesis/Bashfiles/extract_images.sh
-ffmpeg -i "$video_path" "$output"/ex_frame_%05d.png
+# sbatch $HOME/bcth/Bachelor_Thesis/Bashfiles/yolo/extract_images.sh
+ffmpeg -i "$video_path" "$output"/$video%05d.png

@@ -74,8 +74,8 @@ def read_labels(labels_folder:str,dh:int, dw:int):
                 bbox_dm = {
                 "top":t,
                 "left":l,
-                "height":h,
-                "width":w
+                "height":h*dh,
+                "width":w*dw
                 }
                 label_file_annos.append(bbox_dm)
             #all_labels[f"{frame_id}"].append(label_file_annos)
@@ -142,12 +142,12 @@ def read_global_keys(ndjson):
     print(global_keys)
     return global_keys
 
-def upload_labels_job(labels,client,key):
+def upload_labels_job(labels,client):
     # Upload MAL label for this data row in project
     upload_job = MALPredictionImport.create_from_objects(
     client = client,
     project_id = "cm3h8ysq40d0807znhxaiec0z",
-    name = f"mal_job_{key}_"+str(uuid.uuid4()),
+    name = "mal_job"+str(uuid.uuid4()),
     predictions = labels)
     upload_job.wait_till_done()
     print("Errors:", upload_job.errors)
@@ -200,25 +200,24 @@ if __name__ == "__main__":
             # ...and create bbxo annotation 
             bbox_anno=create_bbox_anno("zebrafish",True,key,bbox["top"],bbox["left"],bbox["height"],bbox["width"])
             annotation_list.append(bbox_anno)        
-            labels=[]
-            labels.append(
-            lb_types.Label(
-                data= {"global_key": global_key},
-                annotations = annotation_list,
-                # Optional: set the label as a benchmark
-                # Only supported for groud truth imports
-                is_benchmark_reference = False
-            )
-            )
-            upload_labels_job(labels,client,key)
-
+            
         
     #print("annotation list: \n")
     #print(annotation_list)
+    labels=[]
     #global_keys = read_global_keys("D:\Bachelorarbeit\global_keytest.ndjson")
     
     #for annotation in annotation_list:
-    
+    labels.append(
+        lb_types.Label(
+            data= {"global_key": global_key},
+            annotations = annotation_list,
+            # Optional: set the label as a benchmark
+            # Only supported for groud truth imports
+            is_benchmark_reference = False
+        )
+    )
+    upload_labels_job(labels,client)
     #print("labels:\n")   
     #print(labels)
 
