@@ -74,8 +74,8 @@ def read_labels(labels_folder:str,dh:int, dw:int):
                 bbox_dm = {
                 "top":t,
                 "left":l,
-                "height":h,
-                "width":w
+                "height":h*dh,
+                "width":w*dw
                 }
                 label_file_annos.append(bbox_dm)
             #all_labels[f"{frame_id}"].append(label_file_annos)
@@ -104,22 +104,6 @@ def create_bbox_anno(name:str,keyframe:bool,frame_id,top,left,height,width):
       )
     )
     return anno
-    
-def create_data_set(name:str):
-    dataset = client.create_dataset(
-    name=name,
-    iam_integration=None # If this argument is removed, labelbox will use the default integration for your organization.
-)
-    
-def upload_local_files(local_file_paths:list[str],client):
-    #local_file_paths = ['path/to/local/file1', 'path/to/local/file1']
-    new_dataset = client.create_dataset(name = "Local files upload")
-
-    try:
-        task = new_dataset.create_data_rows(local_file_paths)
-        task.wait_till_done()
-    except Exception as err:
-        print(f'Error while creating labelbox dataset -  Error: {err}')
         
 def read_global_keys(ndjson):
     """
@@ -142,12 +126,12 @@ def read_global_keys(ndjson):
     print(global_keys)
     return global_keys
 
-def upload_labels_job(labels,client,key):
+def upload_labels_job(labels,client):
     # Upload MAL label for this data row in project
     upload_job = MALPredictionImport.create_from_objects(
     client = client,
     project_id = "cm3h8ysq40d0807znhxaiec0z",
-    name = f"mal_job_{key}_"+str(uuid.uuid4()),
+    name = "mal_job"+str(uuid.uuid4()),
     predictions = labels)
     upload_job.wait_till_done()
     print("Errors:", upload_job.errors)
@@ -168,6 +152,21 @@ def get_global_key_by_external_id(ndjson,external_id):
             
         return None
 
+def get_datarow_id_by_external_id(ndjson,external_id):
+    with open(ndjson, 'r', encoding='utf-8') as ndjson_file:
+        for line_number, line in enumerate(ndjson_file, start=1):
+            # Parse die Zeile als JSON
+            try:
+                json_data = json.loads(line)
+            except json.JSONDecodeError as e:
+                print(f"Error while parsing line {line_number}: {e}")
+                continue
+            read_external_id=json_data.get("data_row", {}).get("external_id")
+            if external_id==read_external_id:
+                id=json_data.get("data_row", {}).get("id")
+                return id
+            
+        return None
     
     
     
@@ -200,25 +199,24 @@ if __name__ == "__main__":
             # ...and create bbxo annotation 
             bbox_anno=create_bbox_anno("zebrafish",True,key,bbox["top"],bbox["left"],bbox["height"],bbox["width"])
             annotation_list.append(bbox_anno)        
-            labels=[]
-            labels.append(
-            lb_types.Label(
-                data= {"global_key": global_key},
-                annotations = annotation_list,
-                # Optional: set the label as a benchmark
-                # Only supported for groud truth imports
-                is_benchmark_reference = False
-            )
-            )
-            upload_labels_job(labels,client,key)
-
+            
         
     #print("annotation list: \n")
     #print(annotation_list)
+    labels=[]
     #global_keys = read_global_keys("D:\Bachelorarbeit\global_keytest.ndjson")
     
     #for annotation in annotation_list:
-    
+    labels.append(
+        lb_types.Label(
+            data= {"global_key": global_key},
+            annotations = annotation_list,
+            # Optional: set the label as a benchmark
+            # Only supported for groud truth imports
+            is_benchmark_reference = False
+        )
+    )
+    upload_labels_job(labels,client)
     #print("labels:\n")   
     #print(labels)
 

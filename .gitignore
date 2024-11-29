@@ -7,3 +7,4 @@ notes_bcth.txt
 /video_utils/copy_files.py
 *.ndjson
 *rename*
+*.pyc

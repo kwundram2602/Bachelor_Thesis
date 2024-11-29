@@ -4,11 +4,12 @@
 
 #SBATCH --tasks-per-node=8
 
-#SBATCH --partition=express
 
-#SBATCH --mem=20GB
+#SBATCH --partition=gpua100
 
-#SBATCH --time=0-01:00:00
+#SBATCH --mem=64GB
+
+#SBATCH --time=1-00:00:00
 
 #SBATCH --job-name=bc_th_detect
 

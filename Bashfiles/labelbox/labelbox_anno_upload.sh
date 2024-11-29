@@ -34,7 +34,8 @@ ndjson_path=/home/k/kwundram/bcth/Bachelor_Thesis/labelbox_utils/lbx_meta_data.n
 external_id=B1D1_C1_ST_converted_chunk_7200_8400.mp4
 external_id_woe="$(basename "$external_id" .${external_id##*.})"
 echo "$external_id_woe"
-label_path=/scratch/tmp/kwundram/bcth/runs/detect_mal/24.11.2024/18:37:40/$external_id_woe/labels/
+label_path=/scratch/tmp/kwundram/bcth/runs/detect_lbx/28.11.2024/B1D1_C1_ST_c_conf0.2/labels
+#label_path=/scratch/tmp/kwundram/bcth/runs/detect_mal/24.11.2024/18:37:40/$external_id_woe/labels/
 # run labelbox upload
 # sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/labelbox_upload.sh
 python $repo/labelbox_utils/lb_bbox_upload.py --external_id $external_id --label_path $label_path --ndjson_path $ndjson_path
