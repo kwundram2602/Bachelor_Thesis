@@ -1,3 +1,3 @@
-from lb_bbox_upload import get_datarow_id_by_external_id
+from bcth.Bachelor_Thesis.labelbox_utils.lb_label_upload import get_datarow_id_by_external_id
 
 get_datarow_id_by_external_id()

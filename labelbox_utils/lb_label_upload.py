@@ -84,7 +84,7 @@ def read_labels(labels_folder:str,dh:int, dw:int):
     
     return all_labels
                 
-def create_bbox_anno(name:str,keyframe:bool,frame_id,top,left,height,width):
+def create_video_bbox_anno(name:str,keyframe:bool,frame_id,top,left,height,width):
     # bbox dim
     bbox_dm = {
     "top":top,
@@ -103,6 +103,23 @@ def create_bbox_anno(name:str,keyframe:bool,frame_id,top,left,height,width):
           end=lb_types.Point(x=bbox_dm["left"] + bbox_dm["width"], y=bbox_dm["top"] + bbox_dm["height"]), # x= left + width , y = top + height
       )
     )
+    return anno
+
+def create_image_bbox_anno(name:str,top,left,height,width):
+    # bbox dim
+    bbox_dm = {
+    "top":top,
+    "left":left,
+    "height":height,
+    "width":width
+    }
+    # new annotation
+    anno = lb_types.ObjectAnnotation(
+    name=name,  # must match your ontology feature's name
+    value=lb_types.Rectangle(
+        start=lb_types.Point(x=bbox_dm["left"], y=bbox_dm["top"]),  # x = left, y = top 
+        end=lb_types.Point(x=bbox_dm["left"]+bbox_dm["width"], y=bbox_dm["top"]+bbox_dm["height"]),  # x= left + width , y = top + height
+    ))
     return anno
         
 def read_global_keys(ndjson):
@@ -127,6 +144,12 @@ def read_global_keys(ndjson):
     return global_keys
 
 def upload_labels_job(labels,client):
+    """
+    Creates Upload Job to upload labels
+
+    :param labels: label objects
+    :param client: labelbox client instance
+    """
     # Upload MAL label for this data row in project
     upload_job = MALPredictionImport.create_from_objects(
     client = client,
@@ -135,7 +158,47 @@ def upload_labels_job(labels,client):
     predictions = labels)
     upload_job.wait_till_done()
     print("Errors:", upload_job.errors)
+
+def get_all_external_ids_from_ndjson(ndjson):
+    """
+    Gets all external IDs from an NDJSON file, including duplicates, and returns them as a list.
+
+    :param ndjson: Path to NDJSON file containing data rows with external IDs.
+    :return: List of external IDs.
+    """
+    with open(ndjson, 'r', encoding='utf-8') as ndjson_file:
+        external_ids=[]
+        for line_number, line in enumerate(ndjson_file, start=1):
+            # Parse die Zeile als JSON
+            try:
+                json_data = json.loads(line)
+            except json.JSONDecodeError as e:
+                print(f"Error while parsing line {line_number}: {e}")
+                continue
+            
+            read_external_id=json_data.get("data_row", {}).get("external_id")
+            if read_external_id is not None:
+                external_ids.append(read_external_id)
+            else:
+                print(f"No 'external_id' found in line {line_number}.")
+    return external_ids
+
+def get_unique_external_ids(external_ids:list):
+    """
+    Takes a list of external IDs and returns it without duplicates.
+    Parameters
     
+    :param list[str] external_ids: list of External ids
+    :return: List of  unique external IDs.
+    """
+    seen = set()
+    unique_ids = []
+    for external_id in external_ids:
+        if external_id not in seen:
+            unique_ids.append(external_id)
+            seen.add(external_id)
+    return unique_ids
+               
 def get_global_key_by_external_id(ndjson,external_id):
     with open(ndjson, 'r', encoding='utf-8') as ndjson_file:
         for line_number, line in enumerate(ndjson_file, start=1):
@@ -197,8 +260,8 @@ if __name__ == "__main__":
         for bbox in labels_from_txt[key]:
             #print(bbox)
             # ...and create bbxo annotation 
-            bbox_anno=create_bbox_anno("zebrafish",True,key,bbox["top"],bbox["left"],bbox["height"],bbox["width"])
-            annotation_list.append(bbox_anno)        
+            bbox_anno=create_image_bbox_anno("zebrafish",bbox["top"],bbox["left"],bbox["height"],bbox["width"])
+            annotation_list.append(bbox_anno)     
             
         
     #print("annotation list: \n")
