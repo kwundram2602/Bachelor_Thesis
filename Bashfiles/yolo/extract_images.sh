@@ -4,7 +4,7 @@
 
 #SBATCH --tasks-per-node=10
 
-#SBATCH --partition=normal
+#SBATCH --partition=express
 
 #SBATCH --mem=24GB
 
@@ -20,15 +20,15 @@
 module purge
 module load palma/2022a  GCCcore/11.3.0 FFmpeg/4.4.2
 
-video=B1D1_C1_ST_c
+
 # mp4 folder
-video_path=/scratch/tmp/kwundram/bcth/data/whole_data/converted/Batch1/B1D1/$video.mp4
+video_path=$WORK/bcth/data/whole_data/split_data/B1D1/B1D1_C1/B1D1_C1_ST_converted_chunk_0_1200.mp4
 #output folder
-output=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/Batch1/B1D1/$video/
+output=$WORK/bcth/data/whole_data/split_data/B1D1/B1D1_C1/extracted_images/B1D1_C1_ST_converted_chunk_0_1200/
 
 yolo_utils=/home/k/kwundram/bcth/Bachelor_Thesis/yolo_utils/
 # creates output path if it doesnt exist
 python $yolo_utils/create_path.py --path $output
 
 # sbatch $HOME/bcth/Bachelor_Thesis/Bashfiles/yolo/extract_images.sh
-ffmpeg -i "$video_path" "$output"/$video%05d.png
+ffmpeg -i "$video_path" "$output"/frame%05d.png

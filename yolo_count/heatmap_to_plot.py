@@ -4,14 +4,14 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
-def count_detections(labels_folder,image_path,output_path,mean_factor):
+def count_detections(labels_folder,image_path,output_path,mean_factor,image_width,image_height):
     
     # Get the current date and time
     now = datetime.now()
     formatted_date = now.strftime("%H.%M.%S")  
     print("Formatted date:", formatted_date)
     
-    masc = np.zeros((1024,1280),dtype = np.float32)
+    masc = np.zeros((image_height,image_width),dtype = np.float32)
     # for all label txt files
     for labeltxt in sorted(os.listdir(labels_folder)):
         print("labeltxt",labeltxt)
@@ -50,10 +50,6 @@ def count_detections(labels_folder,image_path,output_path,mean_factor):
             print("r",r)
             print("t",t)
             print("b",b)
-            #cv2.circle(img, (l,t), radius=0, color=(0, 0, 255), thickness=-1)
-            #cv2.circle(img, (r,t), radius=0, color=(0, 0, 255), thickness=-1)
-            #cv2.circle(img, (r,b), radius=0, color=(0, 0, 255), thickness=-1)
-            #cv2.circle(img, (l,b), radius=0, color=(0, 0, 255), thickness=-1)
             
             masc[t:b,l:r]+=1
             # next line
@@ -64,17 +60,29 @@ def count_detections(labels_folder,image_path,output_path,mean_factor):
     print("np.median(masc)",np.median(masc))
     print("np.mean(masc)",np.mean(masc))
     image_mean= np.mean(img)
-    merge_before = False
     cmap_n=2
     
+    # normalize masc with maximum 
     masc_u8 = ((masc / np.max(masc)) * 256).astype(np.uint8)
-    colorMap= cv2.applyColorMap(masc_u8 , cmap_n)
-    # color map in respect to image mean
-    colorMap=colorMap/(mean_factor*image_mean)
-    # merge color map with image
-    merged_u8 = img+colorMap
-    # write image
-    cv2.imwrite(os.path.join(output_path,f"{formatted_date}_merged_heatmap_new_4_cm_{cmap_n}_mb{merge_before}_mf{mean_factor}.png"), merged_u8)
+    
+    
+    # create plot
+    dpi=100
+    fig_width = image_width / dpi
+    fig_height = image_height / dpi
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height),dpi=dpi)
+    # plot color Map
+    c = ax.imshow(masc_u8, cmap='viridis', origin='upper', extent=[0, image_width, 0, image_height])
+    # Add a color bar
+    plt.colorbar(c, ax=ax, label='Intensity')
+    #ax.axis('off')  # Turn off axis labels and ticks
+    ax.set_xlim(0, image_width)
+    ax.set_ylim(0, image_height)
+    # Save the plot as an image
+    output_file=os.path.join(output_path,"heatmap_plot_new_u8.png")
+    plt.savefig(output_file, dpi=dpi, bbox_inches='tight',pad_inches=0)
+    
+    
         
         
         
@@ -85,10 +93,15 @@ if __name__ == "__main__":
     parser.add_argument('--labels_folder', type=str, required=True, help='path to label txts')
     parser.add_argument('--image_path', type=str, required=True, help='path to example image to get shape ')
     parser.add_argument('--output_path', type=str, required=True, help='path to label txts')
+    parser.add_argument('--image_height', type=str, required=False, help='image_height')
+    parser.add_argument('--image_width', type=str, required=False, help='image_width')
 
     args = parser.parse_args()
     labels_folder =args.labels_folder
     image_path = args.image_path
     output_path=args.output_path
-    count_detections(labels_folder,image_path,output_path,0.025)
+    image_height=1024
+    image_width=1280
+
+    count_detections(labels_folder,image_path,output_path,0.025,image_width,image_height)
 

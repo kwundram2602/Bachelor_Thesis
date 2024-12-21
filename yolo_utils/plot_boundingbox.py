@@ -2,10 +2,10 @@ import cv2
 import matplotlib.pyplot as plt
 import argparse
 
-
 def plot_bbox_to_image(image_path:str,label_path:str):
     """
     Plots bounding box from coordinates in label file to image using opencv and matplotlib.
+    YOLO format gives x and y center of bounding box and width and height
 
     :param image_path: Path to image.
     :param label_path: Path to label text file.

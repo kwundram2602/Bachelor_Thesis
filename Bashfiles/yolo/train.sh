@@ -4,9 +4,10 @@
 
 #SBATCH --tasks-per-node=8
 
-#SBATCH --partition=gpua100
+#SBATCH --partition=gpu2080 
+# try gpua100( max 240 GB),gpu2080( max 240 GB),gpuhgx,gpu3090,
 
-#SBATCH --mem=20GB
+#SBATCH --mem=120GB
 
 #SBATCH --gres=gpu:1
 
@@ -33,24 +34,26 @@ conda activate $HOME/envs/bc_th
 # code location
 yh=$HOME/bcth/Bachelor_Thesis/yolov7/
 # yolov7x yaml stays same (anchor, nc, backbone )
-cfg="$yh"/cfg/training/yolov7x_zebrafish.yaml
+#cfg="$yh"/cfg/training/yolov7x_zebrafish.yaml
+cfg=$yh/cfg/training/yolov7_zebrafish.yaml
 # data yaml contains absolute paths for training  and/or testing
 data="$yh"/data/zebrafish_data.yaml
 # hyp stays same (parameter)
 hyp="$yh"/data/hyp.scratch.p5.yaml
-#yolov7x weights
-weights=/scratch/tmp/kwundram/bcth/pt_weights/yolov7x.pt
+# learning weights
+weights=/scratch/tmp/kwundram/bcth/pt_weights/transfer-learning/yolov7_training.pt
 day=`date +%d.%m.%Y`
 time=`date +%H:%M:%S`
 echo " $day, $time"
 epochs=150
 project=/scratch/tmp/kwundram/bcth/runs/train/"$day"/
 # [1024, 896, 768, 640, 512, 384, 256]
-img=768
+img=1024
 name="bc_th_train_ep"$epochs"_img"$img"_t"$time""
 
-# sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/train.sh
-python "$yh"/train.py --workers 4 --adam --evolve --device 0 --batch-size 10 --img $img $img --data "$data" --cfg "$cfg"  --weights "$weights" --hyp "$hyp" --single-cls --epochs $epochs  --name "$name"  --project "$project"
+# sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/yolo/train.sh
+# --evolve ?
+python "$yh"/train.py --workers 4 --adam --device 0 --batch-size 6 --img $img $img --data "$data" --cfg "$cfg"  --weights "$weights" --hyp "$hyp" --single-cls --epochs $epochs  --name "$name"  --project "$project"
 
 conda deactivate
 module purge

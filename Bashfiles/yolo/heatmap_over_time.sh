@@ -31,13 +31,15 @@ conda activate $HOME/envs/bc_th
 
 # code location
 WORK=/scratch/tmp/kwundram/
+yolo_utils=/home/k/kwundram/bcth/Bachelor_Thesis/yolo_utils/
 yh=$HOME/bcth/Bachelor_Thesis/
+video="/scratch/tmp/kwundram/bcth/data/whole_data/split_data/B1D1/B1D1_C1/B1D1_C1_ST_converted_chunk_0_1200.mp4"
 labels_folder=/scratch/tmp/kwundram/bcth/runs/detect_test/12.11.2024/batch1_day2_1753_1805/detect_batch1_day2_1753_1805_conf0.2_t13:17:19/labels
-image_path=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/Batch1/B1D1/B1D1_C1_ST_c/B1D1_C1_ST_c00002.png
-output_path=/scratch/tmp/kwundram/bcth/data/whole_data/heatmaps/
-# sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/yolo/detections_count.sh
-
-script=heatmap_to_plot.py 
-python "$yh"/yolo_count/$script --labels_folder "$labels_folder" --image_path "$image_path" --output_path "$output_path"
+frame_folder="$WORK/bcth/data/whole_data/split_data/B1D1/B1D1_C1/extracted_images/B1D1_C1_ST_converted_chunk_0_1200"
+output_path=/scratch/tmp/kwundram/bcth/data/whole_data/heatmaps/B1D1_C1_ST_converted_chunk_0_1200/
+# sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/yolo/heatmap_over_time.sh
+python $yolo_utils/create_path.py --path $output_path
+script=heatmap_over_time.py 
+python "$yh"/yolo_count/$script --labels_folder "$labels_folder"  --frame_folder "$frame_folder"  --output_path "$output_path"
 
 

@@ -143,7 +143,7 @@ def read_global_keys(ndjson):
     print(global_keys)
     return global_keys
 
-def upload_labels_job(labels,client):
+def upload_labels_job(labels,client,project_id):
     """
     Creates Upload Job to upload labels
 
@@ -153,11 +153,14 @@ def upload_labels_job(labels,client):
     # Upload MAL label for this data row in project
     upload_job = MALPredictionImport.create_from_objects(
     client = client,
-    project_id = "cm3h8ysq40d0807znhxaiec0z",
+    project_id = project_id,
+    
     name = "mal_job"+str(uuid.uuid4()),
     predictions = labels)
-    upload_job.wait_till_done()
+    upload_job.wait_till_done(1,True)
     print("Errors:", upload_job.errors)
+    print(f"Status of uploads: {upload_job.statuses}")
+
 
 def get_all_external_ids_from_ndjson(ndjson):
     """
