@@ -8,3 +8,4 @@ notes_bcth.txt
 *.ndjson
 *rename*
 *.pyc
+*test_shell.sh

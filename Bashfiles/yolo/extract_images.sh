@@ -14,7 +14,7 @@
 
 #SBATCH --mail-type=ALL
 
-#SBATCH --output /scratch/tmp/%u/output/bc_th/extract_images_%j.log
+#SBATCH --output /scratch/tmp/%u/output/bc_th/extract_images/extract_%j.log
 
 #load modules 
 module purge
@@ -22,13 +22,14 @@ module load palma/2022a  GCCcore/11.3.0 FFmpeg/4.4.2
 
 
 # mp4 folder
-video_path=$WORK/bcth/data/whole_data/split_data/B1D1/B1D1_C1/B1D1_C1_ST_converted_chunk_0_1200.mp4
+file=B1D1_C3_OE_c
+video_path=/scratch/tmp/kwundram/bcth/data/whole_data/converted/Batch1/B1D1/$file.mp4
 #output folder
-output=$WORK/bcth/data/whole_data/split_data/B1D1/B1D1_C1/extracted_images/B1D1_C1_ST_converted_chunk_0_1200/
+output=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/Batch1/B1D1/$file
 
 yolo_utils=/home/k/kwundram/bcth/Bachelor_Thesis/yolo_utils/
 # creates output path if it doesnt exist
 python $yolo_utils/create_path.py --path $output
 
 # sbatch $HOME/bcth/Bachelor_Thesis/Bashfiles/yolo/extract_images.sh
-ffmpeg -i "$video_path" "$output"/frame%05d.png
+ffmpeg -i "$video_path" "$output"/$file%05d.png

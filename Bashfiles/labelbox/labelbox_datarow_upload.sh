@@ -4,11 +4,11 @@
 
 #SBATCH --tasks-per-node=30
 
-#SBATCH --partition=express
+#SBATCH --partition=long
 # normal ,long, express,gpua100
 #SBATCH --mem=48GB
 
-#SBATCH --time=0-02:00:00
+#SBATCH --time=7-00:00:00
 
 #SBATCH --job-name=lbx_label_upload
 
@@ -27,9 +27,9 @@ source $CONDA_BASE/etc/profile.d/conda.sh
 conda deactivate
 conda activate $HOME/envs/bc_th
 # upload script
-script=/home/k/kwundram/bcth/Bachelor_Thesis/labelbox_utils/lb_data_row_upload2.py
+script=/home/k/kwundram/bcth/Bachelor_Thesis/labelbox_utils/lb_data_row_upload_chunkwise.py
 # folder with images for  uploading
-images_folder=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/Batch1/B1D1/B1D1_C1_ST_c/
+images_folder=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/Batch1/B1D1/B1D1_C2_BE_c
 slice_size=10
 # ndjson from labelbox to check for already existing external ids
 #ndjson="/home/k/kwundram/bcth/Bachelor_Thesis/labelbox_utils/29.11_2.ndjson"

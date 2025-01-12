@@ -63,8 +63,8 @@ def count_detections(labels_folder,image_path,output_path,mean_factor,image_widt
     cmap_n=2
     
     # normalize masc with maximum 
-    masc_u8 = ((masc / np.max(masc)) * 256).astype(np.uint8)
-    colorMap= cv2.applyColorMap(masc_u8 , cmap_n)
+    masc_u8 = ((masc / np.max(masc)) * 255).astype(np.uint8) # masc_u8 between 0 and 255
+    colorMap= cv2.applyColorMap(masc_u8 , cmap_n) # colormapped source image (masc_u8)
     # color map in respect to image mean
     colorMap=colorMap/(mean_factor*image_mean)
     # merge color map with image

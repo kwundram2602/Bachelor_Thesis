@@ -27,8 +27,8 @@ source $CONDA_BASE/etc/profile.d/conda.sh
 conda deactivate
 conda activate $HOME/envs/bc_th
 
-convert_output=/scratch/tmp/kwundram/bcth/data/whole_data/converted/Batch1/B1D1/B1D1_C1_ST_c.mp4
-video_path=/scratch/tmp/kwundram/bcth/data/whole_data/Batch1/B1D1/B1D1_C1_ST.mp4
+convert_output=/scratch/tmp/kwundram/bcth/data/whole_data/converted/Batch1/B1D1/B1D1_C3_OE_c.mp4
+video_path=/scratch/tmp/kwundram/bcth/data/whole_data/Batch1/B1D1/B1D1_C3_OE.mp4
 script=/home/k/kwundram/bcth/Bachelor_Thesis/video_utils/video_split.py
 python $script --video_path "$video_path" --convert_output "$convert_output"
-# sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/convert_video.sh
+# sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/video_utils/convert_video.sh

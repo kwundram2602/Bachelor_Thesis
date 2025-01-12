@@ -30,8 +30,8 @@ conda activate $HOME/envs/bc_th
 # script location
 script=/home/k/kwundram/bcth/Bachelor_Thesis/labelbox_utils/lb_upload_missing_rows.py
 
-ndjson_path=/scratch/tmp/kwundram/bcth/data/whole_data/export_5_12_24.ndjson
-local_files=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/Batch1/B1D1/B1D1_C1_ST_c
+ndjson_path=/scratch/tmp/kwundram/bcth/data/whole_data/27_12.ndjson
+local_files=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/Batch1/B1D1/B1D1_C2_BE_c
 
 python $script --ndjson_path $ndjson_path --local_files $local_files
 # sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/labelbox/upload_missing_rows.sh

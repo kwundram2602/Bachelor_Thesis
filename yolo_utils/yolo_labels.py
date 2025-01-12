@@ -22,8 +22,7 @@ def delete_classes(labels_folder:str,class_index:int):
             file.writelines(lines)
             print("written...")
             file.close()
-            
-            
+                        
 def change_classID(labels_folder:str,old_index:int,new_index:int):
     """
     Changes old class ID to new class ID.

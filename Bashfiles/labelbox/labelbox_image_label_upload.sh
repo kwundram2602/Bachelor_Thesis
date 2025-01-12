@@ -8,7 +8,7 @@
 # normal , express, bigsmp
 #SBATCH --mem=24GB
 
-#SBATCH --time=0-60:00:00
+#SBATCH --time=4-00:00:00
 
 #SBATCH --job-name=lbx_label_upload
 
@@ -30,11 +30,12 @@ conda activate $HOME/envs/bc_th
 # repo
 repo=/home/k/kwundram/bcth/Bachelor_Thesis/
 # args
-ndjson_path=/scratch/tmp/kwundram/bcth/data/whole_data/90k_finalexport_chunk1.ndjson
+#ndjson_path=/scratch/tmp/kwundram/bcth/data/whole_data/90k_finalexport_chunk1.ndjson
+ndjson_path=/scratch/tmp/kwundram/bcth/data/whole_data/27_12_2024_upload_labels.ndjson
 #external_id=B1D1_C1_ST_converted_chunk_7200_8400.mp4
 #external_id_woe="$(basename "$external_id" .${external_id##*.})"
 #echo "$external_id_woe"
-label_path=/scratch/tmp/kwundram/bcth/runs/detect_lbx/28.11.2024/B1D1_C1_ST_c_conf0.2/labels
+label_path=/scratch/tmp/kwundram/bcth/runs/detect_lbx/27.12.2024/B1D1_C2_BE_c_conf0.55/labels
 #label_path=/scratch/tmp/kwundram/bcth/runs/detect_mal/24.11.2024/18:37:40/$external_id_woe/labels/
 # run labelbox upload
 # sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/labelbox/labelbox_image_label_upload.sh

@@ -9,6 +9,8 @@
 
 #SBATCH --mem=64GB
 
+#SBATCH --gres=gpu:1
+
 #SBATCH --time=1-00:00:00
 
 #SBATCH --job-name=bc_th_detect
@@ -35,10 +37,10 @@ yh=$HOME/bcth/Bachelor_Thesis/yolov7/
 
 # video batch and folder with extracted images as source for detection
 
-batch=B1D1_C1_ST_c
+batch=B1D1_C2_BE_c
 source=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/Batch1/B1D1/$batch
 # pre trained weights (own or yolo weights)
-weights=/scratch/tmp/kwundram/bcth/runs/train/09.11.2024/bc_th_train_ep150_img1024_t19:40:37/weights/best.pt
+weights=/scratch/tmp/kwundram/bcth/runs/train/15.12.2024/bc_th_train_ep150_img1024_t12:35:26/weights/best.pt
 #weights="$WORK"/bcth/pt_weights/yolov7x.pt  yolov7-e6e.pt
 #weights="$WORK"/bcth/pt_weights/yolov7-e6e.pt
 day=`date +%d.%m.%Y`
@@ -47,7 +49,7 @@ time=`date +%H:%M:%S`
 project=/scratch/tmp/kwundram/bcth/runs/detect_lbx/$day/
 # parent folder for detection (only when using yolo weights)
 #project=/scratch/tmp/kwundram/bcth/runs/detect
-conf=0.2
+conf=0.55
 name=$batch"_conf"$conf
 
 # sbatch $HOME/bcth/Bachelor_Thesis/Bashfiles/yolo/detect.sh
