@@ -14,7 +14,7 @@
 
 #SBATCH --job-name=bc_th_heatmap
 
-#SBATCH --output=/scratch/tmp/kwundram/output/bc_th/detect_count/detect_count%j.log
+#SBATCH --output=/scratch/tmp/kwundram/output/bc_th/heatmap_to_plot/heat_map_to_plot_%j.log
 
 #SBATCH --mail-type=ALL
 

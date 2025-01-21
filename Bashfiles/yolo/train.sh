@@ -4,14 +4,14 @@
 
 #SBATCH --tasks-per-node=8
 
-#SBATCH --partition=gpu2080 
+#SBATCH --partition=gpua100 
 # try gpua100( max 240 GB),gpu2080( max 240 GB),gpuhgx,gpu3090,
 
 #SBATCH --mem=120GB
 
 #SBATCH --gres=gpu:1
 
-#SBATCH --time=0-02:00:00
+#SBATCH --time=0-24:00:00
 
 #SBATCH --job-name=bc_th_train
 
@@ -39,13 +39,13 @@ cfg=$yh/cfg/training/yolov7_zebrafish.yaml
 # data yaml contains absolute paths for training  and/or testing
 data="$yh"/data/zebrafish_data.yaml
 # hyp stays same (parameter)
-hyp="$yh"/data/hyp.scratch.p5.yaml
+hyp="$yh"/data/hyp.scratch.p5_zebra.yaml
 # learning weights
 weights=/scratch/tmp/kwundram/bcth/pt_weights/transfer-learning/yolov7_training.pt
 day=`date +%d.%m.%Y`
 time=`date +%H:%M:%S`
 echo " $day, $time"
-epochs=150
+epochs=180
 project=/scratch/tmp/kwundram/bcth/runs/train/"$day"/
 # [1024, 896, 768, 640, 512, 384, 256]
 img=1024
@@ -55,5 +55,8 @@ name="bc_th_train_ep"$epochs"_img"$img"_t"$time""
 # --evolve ?
 python "$yh"/train.py --workers 4 --adam --device 0 --batch-size 6 --img $img $img --data "$data" --cfg "$cfg"  --weights "$weights" --hyp "$hyp" --single-cls --epochs $epochs  --name "$name"  --project "$project"
 
+results=$HOME/bcth/Bachelor_Thesis/yolo_utils/results_graph.py
+results_txt=$project/$name/results.txt
+python results --file_path $results_txt
 conda deactivate
 module purge

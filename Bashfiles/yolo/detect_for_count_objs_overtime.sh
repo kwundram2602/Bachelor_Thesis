@@ -13,9 +13,9 @@
 
 #SBATCH --time=1-00:00:00
 
-#SBATCH --job-name=bc_th_detect
+#SBATCH --job-name=bc_th_detect_objs_over_time
 
-#SBATCH --output=/scratch/tmp/kwundram/output/bc_th/detect/detect%j.log
+#SBATCH --output=/scratch/tmp/kwundram/output/bc_th/detect/detect_%j.log
 
 #SBATCH --mail-type=ALL
 
@@ -31,28 +31,28 @@ conda deactivate
 conda activate $HOME/envs/bc_th
 
 # code location
-WORK=/scratch/tmp/kwundram/
 yh=$HOME/bcth/Bachelor_Thesis/yolov7/
 
 
 # video batch and folder with extracted images as source for detection
+batch=Batch1
+batch_day=B1D1
+# 3 videos with 10 min each
+video_folder="$batch_day"_C3_OE_c_10_min
 
-batch=B1D1_C2_BE_c
-source=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/Batch1/B1D1/$batch
-# pre trained weights (own or yolo weights)
-weights=/scratch/tmp/kwundram/bcth/runs/train/13.01.2025/bc_th_train_ep200_img1024_t15:28:16/weights/best.pt
-#weights="$WORK"/bcth/pt_weights/yolov7x.pt  yolov7-e6e.pt
-#weights="$WORK"/bcth/pt_weights/yolov7-e6e.pt
-day=`date +%d.%m.%Y`
-time=`date +%H:%M:%S`
+source=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/first_x_min/$batch/$batch_day/$video_folder
+# model weights
+weights=/scratch/tmp/kwundram/bcth/runs/train/16.01.2025/bc_th_train_ep180_img1024_t14:34:05/weights/best.pt
+
 # parent folder for detection tests on trained models ( not only pretrained yolov7)
-project=/scratch/tmp/kwundram/bcth/runs/detect_lbx/$day/
+project=/scratch/tmp/kwundram/bcth/runs/detect_count_over_time/
 # parent folder for detection (only when using yolo weights)
 #project=/scratch/tmp/kwundram/bcth/runs/detect
-conf=0.2
-name=$batch"_conf"$conf
+conf=0.4
+name="$video_folder"_$conf
 
-# sbatch $HOME/bcth/Bachelor_Thesis/Bashfiles/yolo/detect.sh
+# sbatch $HOME/bcth/Bachelor_Thesis/Bashfiles/yolo/detect_for_count_objs_overtime.sh
 python "$yh"detect.py --weights "$weights" --conf $conf --img-size 1024 --source "$source" --save-txt --project "$project" --name "$name"
+rm -r "$project/$name/*.png"
 conda deactivate
 module purge
