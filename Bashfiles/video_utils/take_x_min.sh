@@ -4,7 +4,7 @@
 
 #SBATCH --tasks-per-node=20
 
-#SBATCH --partition=express
+#SBATCH --partition=express,normal,long,requeue
 
 #SBATCH --mem=64GB
 
@@ -29,17 +29,20 @@ conda activate $HOME/envs/bc_th
 
 script=/home/k/kwundram/bcth/Bachelor_Thesis/video_utils/take_x_min.py
 # input video
+# B1D1, B1D3, B2D2, B2D3
 batch=Batch2
 batch_day=B2D3
-video_name=B2D3_C1_ST_c.mp4
+video_name="$batch_day"_C1_ST_c.mp4
 input=/scratch/tmp/kwundram/bcth/data/whole_data/converted/$batch/$batch_day/$video_name
 
 # duration in minutes
 duration=10
+# starting point in min
+start_point=30
 # output video
 video_name_no_ext="${video_name%.*}"
 new_name=${video_name_no_ext}_$duration"_min.mp4"
 output=/scratch/tmp/kwundram/bcth/data/whole_data/converted/first_x_min/$batch/$batch_day/$new_name
 
 # sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/video_utils/take_x_min.sh
-python $script --input "$input" --output_path "$output" --duration $duration
+python $script --input "$input" --output_path "$output" --duration $duration --start_point $start_point

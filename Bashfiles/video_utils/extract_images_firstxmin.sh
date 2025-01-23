@@ -4,7 +4,7 @@
 
 #SBATCH --tasks-per-node=10
 
-#SBATCH --partition=express
+#SBATCH --partition=express,normal,long
 
 #SBATCH --mem=24GB
 
@@ -21,8 +21,8 @@ module purge
 module load palma/2022a  GCCcore/11.3.0 FFmpeg/4.4.2
 
 yolo_utils=/home/k/kwundram/bcth/Bachelor_Thesis/yolo_utils/
-batch=Batch1
-batch_day=B1D3
+batch=Batch2
+batch_day=B2D3
 video_dir="/scratch/tmp/kwundram/bcth/data/whole_data/converted/first_x_min/$batch/$batch_day/"
 
 # Iterate over each video file in the directory

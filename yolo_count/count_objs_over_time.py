@@ -84,21 +84,121 @@ def plot_counts_over_time(counts, save_path, n_subplots=1, highlight_threshold=5
     plt.savefig(save_path)
     plt.show()
 
+def yolo_to_image_coordinates(line, dw, dh):
+    # Split string to float
+    _, x, y, w, h = map(float, line.split(' '))
+
+    l = int((x - w / 2) * dw)
+    r = int((x + w / 2) * dw)
+    t = int((y - h / 2) * dh)
+    b = int((y + h / 2) * dh)
+    
+    if l < 0:
+        l = 0
+    if r > dw - 1:
+        r = dw - 1
+    if t < 0:
+        t = 0
+    if b > dh - 1:
+        b = dh - 1
+    return l, r, t, b
+def is_in_aoi(cx, cy, aoi, tolerance=1):
+    
+    x_min, y_min, x_max, y_max = aoi
+
+    return (x_min - tolerance <= cx <= x_max + tolerance) and \
+           (y_min - tolerance <= cy <= y_max + tolerance)
+    
+            
+# aoi : x_min, y_min, x_max, y_max  
+def count_in_aoi(labels_folder, aois, dw, dh):    
+    aoi_dict={}
+    if aois[0][0] < aois[1][0]:
+        aoi_dict['left'] = aois[0]
+        aoi_dict['right'] = aois[1]
+    elif aois[0][0] > aois[1][0]:
+        aoi_dict['right'] = aois[0]
+        aoi_dict['left'] = aois[1]
+    else:
+        print("Invalid AOIs")
+        print(aois)
+        return
+    aoi_counts = {"left": 0 , "right": 0}
+    outside_aoi_count = 0
+
+    for filename in os.listdir(labels_folder):
+        if filename.endswith(".txt"):
+            with open(os.path.join(labels_folder, filename), 'r') as file:
+                for line in file:
+                    l, r, t, b = yolo_to_image_coordinates(line, dw, dh)
+                    center_x = (l + r) / 2
+                    center_y = (t + b) / 2
+
+                    assigned = False
+                    # ymin xmin ymax xmax
+                    
+                    if is_in_aoi(center_x, center_y, aoi_dict['left']):
+                        print(f"line: {line} in left AOI \n")
+                        aoi_counts["left"] += 1
+                        assigned = True
+                        break
+                    
+                    if is_in_aoi(center_x, center_y, aoi_dict['right']):
+                        print(f"line: {line} in right AOI \n")
+                        aoi_counts["right"] += 1
+                        assigned = True
+                        break
+
+                    if not assigned:
+                        print(f" Object found outside AOIs in line: {line} in file {filename} \n")
+                        print(f"center_x: {center_x}, center_y: {center_y}")
+                        print(f"left AOI: {aoi_dict['left']}, right AOI: {aoi_dict['right']}")
+                        outside_aoi_count += 1
+
+    return aoi_counts, outside_aoi_count
+
+def plot_aoi_counts(aoi_counts, outside_aoi_count, save_path):
+    labels = list(aoi_counts.keys()) + ['Outside AOIs']
+    counts = list(aoi_counts.values()) + [outside_aoi_count]
+
+    plt.figure()
+    plt.bar(labels, counts, color=['blue', 'green', 'red'])
+    plt.xlabel('AOI')
+    plt.ylabel('Number of Objects')
+    plt.title('Number of Objects Detected in Each AOI')
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.show()
+
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--folder_path", required=True, help="Path to the folder containing the label files")
     argparser.add_argument("--output_path", required=True, help="Path to the output file")
-    argparser.add_argument("--plot_type", required=True, choices=['percentage', 'count'], help="Type of plot to generate")
+    argparser.add_argument("--plot_type", required=True, choices=['percentage', 'count','aoi'], help="Type of plot to generate")
     argparser.add_argument("--highlight_threshold", type=int, default=5, help="Threshold for highlighting segments")
     argparser.add_argument("--highlight_frames", type=int, default=120, help="Number of frames to highlight")
+    argparser.add_argument("--dw", required=True, type=int, help="Width of the image")
+    argparser.add_argument("--dh", required=True, type=int, help="Height of the image")
+    argparser.add_argument('--aois', nargs='+', type=int, action='append', help='Area of Interest in [x_min, y_min, x_max, y_max] format')
+
     args = argparser.parse_args()
-    
+
     highlight_threshold = args.highlight_threshold
     highlight_frames = args.highlight_frames
     folder_path = args.folder_path
     counts = count_objects_in_folder(folder_path)
     
+    if not os.path.exists(args.output_path):
+        os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
     if args.plot_type == 'percentage':
         plot_counts_percentage(counts, save_path=args.output_path)
     elif args.plot_type == 'count':
         plot_counts_over_time(counts, save_path=args.output_path,n_subplots=4, highlight_threshold=5, highlight_frames=highlight_frames, ncols=2)
+    elif args.plot_type == 'aoi':
+        aois = args.aois
+        print(f"AOIs: {aois}")
+        aoi_counts, outside_aoi_count = count_in_aoi(args.folder_path, aois, args.dw, args.dh)
+
+        print(f"AOI counts: {aoi_counts}")
+        print(f"Detections outside AOIs: {outside_aoi_count}")
+        plot_aoi_counts(aoi_counts, outside_aoi_count, args.output_path)
