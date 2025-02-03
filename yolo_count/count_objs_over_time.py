@@ -31,6 +31,8 @@ def plot_counts_percentage(counts, save_path):
     plt.show()
 
 def plot_counts_over_time(counts, save_path, n_subplots=1, highlight_threshold=5, highlight_frames=48, ncols=2):
+    
+    #print(f"First {20} elements of counts: {list(counts.keys())[:20]}")
     frames = list(counts.keys())
     counts_values = list(counts.values())
     total_frames = len(frames)
@@ -39,10 +41,13 @@ def plot_counts_over_time(counts, save_path, n_subplots=1, highlight_threshold=5
     nrows = (n_subplots + ncols - 1) // ncols  # Calculate the number of rows needed
     fig, axes = plt.subplots(nrows, ncols, figsize=(10 * ncols, 5 * nrows), sharex=False)
     axes = axes.flatten()  # Flatten the axes array for easy iteration
-
+    # 0 ... n_subplots - 1
     for i in range(n_subplots):
-        start_idx = i * frames_per_subplot
-        end_idx = (i + 1) * frames_per_subplot if i < n_subplots - 1 else total_frames
+        # start index of plot
+        start_idx = (i * frames_per_subplot) + 1
+        # end index of 
+        end_idx = (i + 1) * frames_per_subplot +1 if i < n_subplots - 1 else total_frames
+        # frame ids and counts as plot variables
         x = frames[start_idx:end_idx]
         y = counts_values[start_idx:end_idx]
 
@@ -157,7 +162,7 @@ def count_in_aoi(labels_folder, aois, dw, dh):
 
     return aoi_counts, outside_aoi_count
 
-def plot_aoi_counts(aoi_counts, outside_aoi_count, save_path):
+def plot_aoi_counts(aoi_counts, outside_aoi_count,ymax, save_path):
     labels = list(aoi_counts.keys()) + ['Outside AOIs']
     counts = list(aoi_counts.values()) + [outside_aoi_count]
 
@@ -166,6 +171,7 @@ def plot_aoi_counts(aoi_counts, outside_aoi_count, save_path):
     plt.xlabel('AOI')
     plt.ylabel('Number of Objects')
     plt.title('Number of Objects Detected in Each AOI')
+    plt.ylim(top= ymax) 
     plt.tight_layout()
     plt.savefig(save_path)
     plt.show()
@@ -177,8 +183,8 @@ if __name__ == "__main__":
     argparser.add_argument("--plot_type", required=True, choices=['percentage', 'count','aoi'], help="Type of plot to generate")
     argparser.add_argument("--highlight_threshold", type=int, default=5, help="Threshold for highlighting segments")
     argparser.add_argument("--highlight_frames", type=int, default=120, help="Number of frames to highlight")
-    argparser.add_argument("--dw", required=True, type=int, help="Width of the image")
-    argparser.add_argument("--dh", required=True, type=int, help="Height of the image")
+    argparser.add_argument("--dw", required=False, type=int, help="Width of the image")
+    argparser.add_argument("--dh", required=False, type=int, help="Height of the image")
     argparser.add_argument('--aois', nargs='+', type=int, action='append', help='Area of Interest in [x_min, y_min, x_max, y_max] format')
 
     args = argparser.parse_args()
@@ -201,4 +207,4 @@ if __name__ == "__main__":
 
         print(f"AOI counts: {aoi_counts}")
         print(f"Detections outside AOIs: {outside_aoi_count}")
-        plot_aoi_counts(aoi_counts, outside_aoi_count, args.output_path)
+        plot_aoi_counts(aoi_counts, outside_aoi_count,11000, args.output_path)

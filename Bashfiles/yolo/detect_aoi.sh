@@ -100,12 +100,13 @@ name="${videoname}_conf${conf}_$time"
 aoi_args_string=$(IFS=" "; echo "${aoi_args[*]}")
 # sbatch $HOME/bcth/Bachelor_Thesis/Bashfiles/yolo/detect_aoi.sh
 image_size=1024
-python "$yh"detect_aoi.py --weights "$weights" $aoi_args_string --conf $conf --img-size $image_size --source "$source" --save-txt --project "$project" --name "$name"
+#python "$yh"detect_aoi.py --weights "$weights" $aoi_args_string --conf $conf --img-size $image_size --source "$source" --save-txt --project "$project" --name "$name"
 
-label_folder=$project/$name/labels
+#label_folder=$project/$name/labels
+label_folder=/scratch/tmp/kwundram/bcth/runs/detect_aoi/B2D3/23.01.2025/B2D3_C3_OE_c_conf0.4_11:00:42/labels
 count=/home/k/kwundram/bcth/Bachelor_Thesis/yolo_count/count_objs_over_time.py
 
-output_path=/scratch/tmp/kwundram/bcth/data/whole_data/count_objs/$day/aoi/$name/aoi_plot.png
+output_path=/scratch/tmp/kwundram/bcth/data/whole_data/count_objs/aoi/$day/$name/"$videoname"_aoi.png
 python $count --folder_path $label_folder --output_path $output_path --dw 1280 --dh $image_size --plot_type aoi $aoi_args_string
 
 conda deactivate

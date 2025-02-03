@@ -4,7 +4,7 @@
 
 #SBATCH --tasks-per-node=8
 
-#SBATCH --partition=gpu2080 
+#SBATCH --partition=gpu2080,gpuhgx,gpua100,gpu3090
 # try gpua100( max 240 GB),gpu2080( max 240 GB),gpuhgx,gpu3090,
 
 #SBATCH --mem=120GB
@@ -37,8 +37,8 @@ yh=$HOME/bcth/Bachelor_Thesis/yolov7/
 data="$yh"/data/zebrafish_test.yaml
 # weights for testing
 # /scratch/tmp/kwundram/bcth/runs/train/20.01.2025/bc_th_train_ep180_img1024_t23:20:51/weights/best.pt
-model=bc_th_train_ep180_img1024_t23:20:51
-weights=/scratch/tmp/kwundram/bcth/runs/train/20.01.2025/$model/weights/best.pt
+
+weights=/scratch/tmp/kwundram/bcth/runs/train/24.01.2025/yolov7_training180_img896_t13:41:48/weights/best.pt
 
 day=`date +%d.%m.%Y`
 time=`date +%H:%M:%S`
@@ -46,10 +46,10 @@ echo " $day, $time"
 
 project=/scratch/tmp/kwundram/bcth/runs/test/$day
 # [1024, 896, 768, 640, 512, 384, 256]
-img=1024
-conf=0.5
+img=896
+conf=0.4
 iou=0.5
-name="$model"_test_iou_$iou"_conf"$conf"_img"$img""
+name=yolov7_training180_img896_t13:41:48_test_iou_$iou"_conf"$conf"_img"$img""
 
 # sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/yolo/test_yolo.sh
 python $yh/test.py --data $data --verbose --save-txt --single-cls  --task test --img $img --batch 32 --conf $conf --iou $iou --device 0 --weights $weights --project $project --name $name
