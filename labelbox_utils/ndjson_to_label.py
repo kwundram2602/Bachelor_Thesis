@@ -110,7 +110,7 @@ def extract_labels_video(ndjson,project_id,video_batches):
                     print("output_txt",output_txt)
                     for obj_id, obj_data in objects.items():
                         bbox = obj_data.get("bounding_box", {})
-                        print(bbox)
+                        print(f"bbox {bbox} in frame {frame_number}")
                         x_c, y_c, w, h = bbox_to_yolo(bbox,1350,1080)
                         write_labelfile(0,x_c, y_c, w, h,output_txt)
 

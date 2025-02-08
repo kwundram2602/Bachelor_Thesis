@@ -48,7 +48,7 @@ weights=/scratch/tmp/kwundram/bcth/runs/train/16.01.2025/bc_th_train_ep180_img10
 project=/scratch/tmp/kwundram/bcth/runs/detect_count_over_time/
 # parent folder for detection (only when using yolo weights)
 #project=/scratch/tmp/kwundram/bcth/runs/detect
-conf=0.4
+conf=0.5
 name="$video_folder"_$conf
 
 # sbatch $HOME/bcth/Bachelor_Thesis/Bashfiles/yolo/detect_for_count_objs_overtime.sh

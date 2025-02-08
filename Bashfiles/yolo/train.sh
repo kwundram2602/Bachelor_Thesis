@@ -57,7 +57,7 @@ echo " $day, $time"
 epochs=180
 project=/scratch/tmp/kwundram/bcth/runs/train/"$day"/
 # [1024, 896, 768, 640, 512, 384, 256]
-img=640
+img=1024
 name="$pt"$epochs"_img"$img"_t"$time""
 
 # sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/yolo/train.sh

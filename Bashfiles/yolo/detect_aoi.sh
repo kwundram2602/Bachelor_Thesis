@@ -96,8 +96,9 @@ for aoi in "${aois[@]}"; do
     aoi_args+=("--aoi $aoi")
 done
 
-name="${videoname}_conf${conf}_$time"
 aoi_args_string=$(IFS=" "; echo "${aoi_args[*]}")
+name="${videoname}_conf${conf}_$time"
+
 # sbatch $HOME/bcth/Bachelor_Thesis/Bashfiles/yolo/detect_aoi.sh
 image_size=1024
 #python "$yh"detect_aoi.py --weights "$weights" $aoi_args_string --conf $conf --img-size $image_size --source "$source" --save-txt --project "$project" --name "$name"

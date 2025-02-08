@@ -35,9 +35,15 @@ batch_day=B1D1
 
 videoname="$batch_day"_C1_ST #  C1_ST, C2_BE, C3_OE
 
+# detected labels
+#folder_path=/scratch/tmp/kwundram/bcth/runs/detect_count_over_time/"$videoname"_c_10_min_0.4/labels
+folder_path=/scratch/tmp/kwundram/bcth/data/whole_data/converted/overtime_labeled/detected_labels/labels
+# output folder for plot
+output_folder=/scratch/tmp/kwundram/bcth/data/whole_data/converted/overtime_labeled
+#output_folder=/scratch/tmp/kwundram/bcth/data/whole_data/count_objs/over_time/$videoname
+# ground truth labels
+ground_truth=/scratch/tmp/kwundram/bcth/data/whole_data/converted/overtime_labeled/real_labels
 
-folder_path=/scratch/tmp/kwundram/bcth/runs/detect_count_over_time/"$videoname"_c_10_min_0.4/labels
-output_folder=/scratch/tmp/kwundram/bcth/data/whole_data/count_objs/over_time/$videoname
 # 120 frames =5 sec
 # 180 frames =7.5 sec
 # 240 frames =10 sec
@@ -48,4 +54,4 @@ output_path=$output_folder/plot_"$plot_type"_segment_"$highlight_frames".png
 # sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/yolo/count_objs_over_time.sh
 python /home/k/kwundram/bcth/Bachelor_Thesis/video_utils/create_path.py --path $output_folder
 
-python $script --folder_path "$folder_path" --highlight_frames $highlight_frames --output_path "$output_path" --plot_type "$plot_type"
+python $script --ground_truth $ground_truth --folder_path "$folder_path" --highlight_frames $highlight_frames --output_path "$output_path" --plot_type "$plot_type"

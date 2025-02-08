@@ -4,7 +4,7 @@
 
 #SBATCH --tasks-per-node=30
 
-#SBATCH --partition=express
+#SBATCH --partition=express,normal,long
 # normal ,long, express,gpua100
 #SBATCH --mem=48GB
 
@@ -27,9 +27,10 @@ conda activate $HOME/envs/bc_th
 script=/home/k/kwundram/bcth/Bachelor_Thesis/labelbox_utils/ndjson_to_label.py
 
 # change ndjson and output
-ndjson=/scratch/tmp/kwundram/bcth/data/whole_data/studyproject/exported_labels/2024_11_22/study_pr_export.ndjson
+ndjson=/scratch/tmp/kwundram/bcth/data/whole_data/label_ndjsons/full_export_sp_corrected.ndjson
 # has subfolders for each video( contains frames)
-video_batches=/scratch/tmp/kwundram/bcth/data/whole_data/studyproject/exported_labels/2024_11_22/video_frames_png
+#video_batches=/scratch/tmp/kwundram/bcth/data/whole_data/studyproject/exported_labels/2024_11_22/video_frames_png
+video_batches=/scratch/tmp/kwundram/bcth/data/whole_data/converted/labels
 # video batches: /scratch/tmp/kwundram/bcth/data/whole_data/studyproject/exported_labels/2024_11_22/video_frames_png
 
 python $script --ndjson $ndjson --output_folder $video_batches --video

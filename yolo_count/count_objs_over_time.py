@@ -30,11 +30,13 @@ def plot_counts_percentage(counts, save_path):
     plt.savefig(save_path)
     plt.show()
 
-def plot_counts_over_time(counts, save_path, n_subplots=1, highlight_threshold=5, highlight_frames=48, ncols=2):
+def plot_counts_over_time(counts,groundtruth_count, save_path, n_subplots=1, highlight_threshold=5, highlight_frames=48, ncols=2):
     
     #print(f"First {20} elements of counts: {list(counts.keys())[:20]}")
     frames = list(counts.keys())
     counts_values = list(counts.values())
+    ground_truth_counts_values = list(groundtruth_count.values())
+    print(f"ground_truth_counts_values in function: {ground_truth_counts_values}")
     total_frames = len(frames)
     frames_per_subplot = total_frames // n_subplots
 
@@ -50,8 +52,10 @@ def plot_counts_over_time(counts, save_path, n_subplots=1, highlight_threshold=5
         # frame ids and counts as plot variables
         x = frames[start_idx:end_idx]
         y = counts_values[start_idx:end_idx]
+        y_gt = ground_truth_counts_values[start_idx:end_idx]
 
         axes[i].plot(x, y, marker='o', linestyle='-', linewidth=0.5, markersize=1, color='blue')
+        axes[i].plot(x, y_gt, marker='o', linestyle='-', linewidth=0.5, markersize=1, color='green')
         axes[i].set_xlabel('Frame')
         axes[i].set_ylabel('Number of Objects')
         axes[i].set_title(f'Number of Objects Detected Over Frames (Part {i + 1})')
@@ -179,6 +183,7 @@ def plot_aoi_counts(aoi_counts, outside_aoi_count,ymax, save_path):
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--folder_path", required=True, help="Path to the folder containing the label files")
+    argparser.add_argument("--ground_truth", required=False, help="Path to ground truth folder")
     argparser.add_argument("--output_path", required=True, help="Path to the output file")
     argparser.add_argument("--plot_type", required=True, choices=['percentage', 'count','aoi'], help="Type of plot to generate")
     argparser.add_argument("--highlight_threshold", type=int, default=5, help="Threshold for highlighting segments")
@@ -193,13 +198,16 @@ if __name__ == "__main__":
     highlight_frames = args.highlight_frames
     folder_path = args.folder_path
     counts = count_objects_in_folder(folder_path)
-    
+    ground_truth = args.ground_truth
+    ground_truth_counts = count_objects_in_folder(ground_truth) if ground_truth else None
+    print(f"ground_truth_counts: {ground_truth_counts}")
     if not os.path.exists(args.output_path):
         os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
     if args.plot_type == 'percentage':
         plot_counts_percentage(counts, save_path=args.output_path)
     elif args.plot_type == 'count':
-        plot_counts_over_time(counts, save_path=args.output_path,n_subplots=4, highlight_threshold=5, highlight_frames=highlight_frames, ncols=2)
+        plot_counts_over_time(counts,ground_truth_counts, save_path=args.output_path,n_subplots=4, highlight_threshold=5, highlight_frames=highlight_frames, ncols=2)
+        
     elif args.plot_type == 'aoi':
         aois = args.aois
         print(f"AOIs: {aois}")
