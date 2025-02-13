@@ -1,5 +1,6 @@
 import os
 import argparse
+import matplotlib
 import matplotlib.pyplot as plt
 import re
 
@@ -166,6 +167,159 @@ def count_in_aoi(labels_folder, aois, dw, dh):
 
     return aoi_counts, outside_aoi_count
 
+def aoi_count_framewise(labels_folder,aois,dw,dh):
+    aoi_dict={}
+    print(f" aois {aois}")
+    if aois[0][0] < aois[1][0]:
+        aoi_dict['left'] = aois[0]
+        aoi_dict['right'] = aois[1]
+    elif aois[0][0] > aois[1][0]:
+        aoi_dict['right'] = aois[0]
+        aoi_dict['left'] = aois[1]
+    else:
+        print("Invalid AOIs")
+        print(aois)
+        return
+    aoi_counts = {"left": {} , "right": {}}
+    outside_aoi_count= {}
+    # iterate over frames 
+    # need to get frame id
+    for filename in sorted(os.listdir(labels_folder)):
+        if filename.endswith(".txt"):
+            if filename.endswith(".txt"):
+                match = re.search(r'(\d+)\.txt$', filename)
+            if match:
+                frame_number = int(match.group(1))
+            else:
+                print(f"could not get frame number from match {match} ")
+                continue
+            if frame_number not in aoi_counts["left"]:
+                aoi_counts["left"][frame_number] = 0
+            if frame_number not in aoi_counts["right"]:
+                aoi_counts["right"][frame_number] = 0
+            if frame_number not in outside_aoi_count:
+                outside_aoi_count[frame_number] = 0
+            with open(os.path.join(labels_folder, filename), 'r') as file:
+                for line in file:
+                    l, r, t, b = yolo_to_image_coordinates(line, dw, dh)
+                    center_x = (l + r) / 2
+                    center_y = (t + b) / 2
+                    assigned=False
+                    if is_in_aoi(center_x, center_y, aoi_dict['left']):
+                        print(f"line: {line} in left AOI \n")
+                        aoi_counts["left"][frame_number]+= 1
+                        assigned = True
+                        break
+                    
+                    if is_in_aoi(center_x, center_y, aoi_dict['right']):
+                        print(f"line: {line} in right AOI \n")
+                        aoi_counts["right"][frame_number] += 1
+                        assigned = True
+                        break
+                    if not assigned:
+                        #print(f" Object found outside AOIs in line: {line} in file {filename} \n")
+                        #print(f"center_x: {center_x}, center_y: {center_y}")
+                        #print(f"left AOI: {aoi_dict['left']}, right AOI: {aoi_dict['right']}")
+                        outside_aoi_count[frame_number] += 1
+                     
+                print(f' frame {frame_number}: left {aoi_counts["left"][frame_number]}, right {aoi_counts["right"][frame_number]}')
+        print(f"aoi_counts,outside_aoi_count : {aoi_counts['left'][frame_number],aoi_counts['right'][frame_number],outside_aoi_count[frame_number]}")  
+    return aoi_counts,outside_aoi_count
+
+def frame_id_to_timestamp(frame_id,fps=24):
+    # Assuming 30 frames per second
+    seconds = frame_id / fps
+    minutes = seconds // 60
+    seconds = seconds % 60
+    hours = minutes // 60
+    minutes = minutes % 60
+    return f"{int(hours):02}:{int(minutes):02}:{seconds:02.0f}"
+def check_for_pipe_event(aoi_counts, counts, x=15):
+    pipe_events = {"left": {}, "right": {}}
+    pipe_events["left"] = {key: 0 for key in aoi_counts["left"].keys()}
+    pipe_events["right"] = {key: 0 for key in aoi_counts["right"].keys()}
+    for i in range(1, len(counts) - x):
+        if all(i + j in counts and i in counts and counts[i] > counts[i + j] for j in range(1, x + 1)):
+            print(f"count decrease from frame {i} to frame {i + 1} ")
+            if all(aoi_counts["right"][i] > aoi_counts["right"][i + j] for j in range(1, x + 1)):
+                print(f" Decrease in right AOI in frame {i} to frame {i + 1} --> {frame_id_to_timestamp(i)}")
+                if i + 1 not in pipe_events["right"]:
+                    pipe_events["right"][i + 1] = 0
+                pipe_events["right"][i + 1] += 1
+            if all(aoi_counts["left"][i] > aoi_counts["left"][i + j] for j in range(1, x + 1)):
+                print(f" Decrease in left AOI in frame {i} to frame {i + 1}--> {frame_id_to_timestamp(i)}")
+                if i + 1 not in pipe_events["left"]:
+                    pipe_events["left"][i + 1] = 0
+                pipe_events["left"][i + 1] += 1
+
+    return pipe_events
+
+def time_stamp_to_frame_id(time_stamp,fps=24):
+    time = time_stamp.split(':')
+    print(f"time: {time}")
+    minutes = int(time[0])
+    seconds = int(time[1])
+    frame_id = (minutes * 60 + seconds) * fps
+    return frame_id
+def plot_pipe_events(pipe_events,gt_pipe_events, output_path):
+    frames_left = list(pipe_events["left"].keys())
+    events_left = list(pipe_events["left"].values())
+    frames_right = list(pipe_events["right"].keys())
+    events_right = list(pipe_events["right"].values())
+
+    frames_with_events_left = [frame for frame, event in pipe_events["left"].items() if event > 0] 
+    frames_with_events_right = [frame for frame, event in pipe_events["right"].items() if event > 0]
+    
+  
+    timestamps_left = list(frame_id_to_timestamp(i) for i in frames_with_events_left)
+    timestamps_right = list(frame_id_to_timestamp(i) for i in frames_with_events_right)
+
+    
+    # Count the number of instances where pipe events are not 0
+    non_zero_pipe_events_left = sum(1 for event in events_left if event != 0)
+    non_zero_pipe_events_right = sum(1 for event in events_right if event != 0)
+
+
+    
+    plt.figure()
+    plt.ylim(0, 5)
+    plt.scatter(frames_left, events_left, color='blue', label='Left AOI')
+    plt.scatter(frames_right, events_right, color='green', label='Right AOI')
+    plt.xlabel('Frame')
+    plt.ylabel('Number of Pipe Events')
+    plt.title('Pipe Events Detected Over Frames')
+    plt.legend()
+    plt.grid(True)
+    
+    # Add text for total number of events
+    plt.text(0.05, 0.95, f'Total Events in left AOI: {non_zero_pipe_events_left}', transform=plt.gca().transAxes, fontsize=12, verticalalignment='top', color='blue')
+    plt.text(0.05, 0.90, f'Total Events in right AOI: {non_zero_pipe_events_right}', transform=plt.gca().transAxes, fontsize=12, verticalalignment='top', color='green')
+    for i, txt in enumerate(timestamps_left):
+        print( i, txt)
+        y = 1.1 + (0.15*i)
+        x = frames_with_events_left[i]
+        print(f"frames_with_events_left[i], {frames_with_events_left[i]}")
+        try:
+            plt.text(x,y, txt, fontsize=8, ha='center', color='blue')
+        except Exception as e:
+            print(f"Error : {e}")
+
+    for i, txt in enumerate(timestamps_right):
+        y = 1.5 + (0.15*i)
+        x = frames_with_events_right[i]
+        
+        plt.text(x,y, txt, fontsize=8, ha='center', color='green')
+    
+    timestamps_x= [time_stamp_to_frame_id(time_stamp) for time_stamp in gt_pipe_events]
+    for i, txt in enumerate(gt_pipe_events):
+        y = 1.9 + (0.15*i)
+        x = timestamps_x[i]
+        plt.text(x,y, txt, fontsize=8, ha='center', color='red')
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    plt.tight_layout()
+    plt.savefig(output_path)
+    #plt.show()
+   
 def plot_aoi_counts(aoi_counts, outside_aoi_count,ymax, save_path):
     labels = list(aoi_counts.keys()) + ['Outside AOIs']
     counts = list(aoi_counts.values()) + [outside_aoi_count]
@@ -185,18 +339,20 @@ if __name__ == "__main__":
     argparser.add_argument("--folder_path", required=True, help="Path to the folder containing the label files")
     argparser.add_argument("--ground_truth", required=False, help="Path to ground truth folder")
     argparser.add_argument("--output_path", required=True, help="Path to the output file")
-    argparser.add_argument("--plot_type", required=True, choices=['percentage', 'count','aoi'], help="Type of plot to generate")
+    argparser.add_argument("--plot_type", required=True, choices=['percentage', 'count','aoi_cb','aoi'], help="Type of plot to generate")
     argparser.add_argument("--highlight_threshold", type=int, default=5, help="Threshold for highlighting segments")
     argparser.add_argument("--highlight_frames", type=int, default=120, help="Number of frames to highlight")
     argparser.add_argument("--dw", required=False, type=int, help="Width of the image")
     argparser.add_argument("--dh", required=False, type=int, help="Height of the image")
-    argparser.add_argument('--aois', nargs='+', type=int, action='append', help='Area of Interest in [x_min, y_min, x_max, y_max] format')
+    argparser.add_argument('--aois', nargs='+', type=int,action='append', help='Area of Interest in [x_min, y_min, x_max, y_max] format')
+    argparser.add_argument('--gt_pipe_events',nargs='+', type=str, action="append", required=False, help='time stamps for events where fish enters pipe')
 
     args = argparser.parse_args()
 
     highlight_threshold = args.highlight_threshold
     highlight_frames = args.highlight_frames
     folder_path = args.folder_path
+    # object counts for every frame
     counts = count_objects_in_folder(folder_path)
     ground_truth = args.ground_truth
     ground_truth_counts = count_objects_in_folder(ground_truth) if ground_truth else None
@@ -211,8 +367,18 @@ if __name__ == "__main__":
     elif args.plot_type == 'aoi':
         aois = args.aois
         print(f"AOIs: {aois}")
-        aoi_counts, outside_aoi_count = count_in_aoi(args.folder_path, aois, args.dw, args.dh)
+        aoi_counts, outside_aoi_count = count_in_aoi(folder_path, aois, args.dw, args.dh)
 
         print(f"AOI counts: {aoi_counts}")
         print(f"Detections outside AOIs: {outside_aoi_count}")
         plot_aoi_counts(aoi_counts, outside_aoi_count,11000, args.output_path)
+        
+    elif args.plot_type== 'aoi_cb':
+        gt_pipe_events=args.gt_pipe_events
+        gt_pipe_events = [x[0] for x in gt_pipe_events]
+        print("gt_pipe_events",gt_pipe_events)
+        aois = args.aois
+        aoi_counts,outside_aoi_count = aoi_count_framewise(folder_path,aois,args.dw, args.dh)
+        pipe_events=check_for_pipe_event(aoi_counts,counts)
+        plot_pipe_events(pipe_events,gt_pipe_events,args.output_path)
+        print(f"pipe_events,{pipe_events}")
