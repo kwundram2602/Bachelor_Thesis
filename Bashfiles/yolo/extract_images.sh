@@ -21,18 +21,17 @@ module purge
 module load palma/2022a  GCCcore/11.3.0 FFmpeg/4.4.2
 
 yolo_utils=/home/k/kwundram/bcth/Bachelor_Thesis/yolo_utils/
-batch=Batch1
-batch_day=B1D7
-video_dir="/scratch/tmp/kwundram/bcth/data/whole_data/converted/$batch/$batch_day/"
 
+#video_dir="/scratch/tmp/kwundram/bcth/data/whole_data/converted/$batch/$batch_day/"
+video=/scratch/tmp/kwundram/bcth/data/whole_data/converted/first_x_min/Batch1/B1D3/B1D3_C3_OE_c_1_min_st35.mp4
 # Iterate over each video file in the directory
-for video in "$video_dir"*.mp4; do
-    echo "Processing $video"
+#for video in "$video_dir"*.mp4; do
+#    echo "Processing $video"
     # video name
     video_name=$(basename "$video")
     video_name_no_ext="${video_name%.*}"
     echo "... $video_name"
-    output=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/$batch/$batch_day/$video_name_no_ext/
+    output=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/$video_name_no_ext/
     echo "output $output"
     # creates output path if it doesnt exist
     python $yolo_utils/create_path.py --path $output

@@ -27,12 +27,12 @@ conda activate $HOME/envs/bc_th
 script=/home/k/kwundram/bcth/Bachelor_Thesis/labelbox_utils/ndjson_to_label.py
 
 # change ndjson and output
-ndjson=/scratch/tmp/kwundram/bcth/data/whole_data/label_ndjsons/full_export_sp_corrected.ndjson
+ndjson=/scratch/tmp/kwundram/bcth/data/whole_data/converted/st35_1m_ovt.ndjson
 # has subfolders for each video( contains frames)
 #video_batches=/scratch/tmp/kwundram/bcth/data/whole_data/studyproject/exported_labels/2024_11_22/video_frames_png
-video_batches=/scratch/tmp/kwundram/bcth/data/whole_data/converted/labels
+video_batches=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/for_over_time_gt
 # video batches: /scratch/tmp/kwundram/bcth/data/whole_data/studyproject/exported_labels/2024_11_22/video_frames_png
-
-python $script --ndjson $ndjson --output_folder $video_batches --video
+proj_id=cm793v5960avi07xgejg11nxp
+python $script --ndjson $ndjson --output_folder $video_batches --video --proj_id $proj_id
 
 # sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/labelbox/ndjson_tolabel_video.sh

@@ -108,7 +108,7 @@ label_folder=/scratch/tmp/kwundram/bcth/runs/detect_aoi/B2D3/23.01.2025/B2D3_C3_
 count=/home/k/kwundram/bcth/Bachelor_Thesis/yolo_count/count_objs_over_time.py
 
 output_path=/scratch/tmp/kwundram/bcth/data/whole_data/count_objs/aoi/$day/$name/"$videoname"_aoi.png
-python $count --folder_path $label_folder --output_path $output_path --dw 1280 --dh $image_size --plot_type aoi $aoi_args_string
+python $count --folder_path $label_folder  --output_path $output_path --dw 1280 --dh $image_size --plot_type aoi $aoi_args_string
 
 conda deactivate
 module purge

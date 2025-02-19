@@ -3,8 +3,13 @@ import argparse
 import matplotlib
 import matplotlib.pyplot as plt
 import re
+import math
 
 def count_objects_in_folder(folder_path):
+    """
+    Counts the number of detected objects for each frame label .txt file in folder path.
+    Extracts frame number from file name. Text files should be named accordingly.
+    """
     counts = {}
     for filename in sorted(os.listdir(folder_path)):
         if filename.endswith(".txt"):
@@ -17,6 +22,9 @@ def count_objects_in_folder(folder_path):
     return counts
 
 def plot_counts_percentage(counts, save_path):
+    """
+    
+    """
     total_counts = sum(counts.values())
     percentages = {frame: (count / total_counts) * 100 for frame, count in counts.items()}
     
@@ -32,12 +40,14 @@ def plot_counts_percentage(counts, save_path):
     plt.show()
 
 def plot_counts_over_time(counts,groundtruth_count, save_path, n_subplots=1, highlight_threshold=5, highlight_frames=48, ncols=2):
-    
+    """
+    Plots the number of detected objects framewise and compares woth ground truth if available."""
     #print(f"First {20} elements of counts: {list(counts.keys())[:20]}")
-    frames = list(counts.keys())
+    frames = list(counts.keys())    
+    print(f"first 10 frames: {frames[:10]}")
     counts_values = list(counts.values())
     ground_truth_counts_values = list(groundtruth_count.values())
-    print(f"ground_truth_counts_values in function: {ground_truth_counts_values}")
+    print(f"ground_truth_counts_values in function: {ground_truth_counts_values[:10]}")
     total_frames = len(frames)
     frames_per_subplot = total_frames // n_subplots
 
@@ -46,21 +56,26 @@ def plot_counts_over_time(counts,groundtruth_count, save_path, n_subplots=1, hig
     axes = axes.flatten()  # Flatten the axes array for easy iteration
     # 0 ... n_subplots - 1
     for i in range(n_subplots):
+        
         # start index of plot
         start_idx = (i * frames_per_subplot) + 1
         # end index of 
         end_idx = (i + 1) * frames_per_subplot +1 if i < n_subplots - 1 else total_frames
+        print(f" i {i} start_idx: {start_idx}, end_idx: {end_idx}")
         # frame ids and counts as plot variables
         x = frames[start_idx:end_idx]
         y = counts_values[start_idx:end_idx]
         y_gt = ground_truth_counts_values[start_idx:end_idx]
 
         axes[i].plot(x, y, marker='o', linestyle='-', linewidth=0.5, markersize=1, color='blue')
-        axes[i].plot(x, y_gt, marker='o', linestyle='-', linewidth=0.5, markersize=1, color='green')
+        if groundtruth_count:
+            axes[i].plot(x, y_gt, marker='o', linestyle='-', linewidth=0.5, markersize=1, color='green')
         axes[i].set_xlabel('Frame')
         axes[i].set_ylabel('Number of Objects')
         axes[i].set_title(f'Number of Objects Detected Over Frames (Part {i + 1})')
         axes[i].grid(True)
+        y_ticks = range(0, 7, 1)  # Adjust the step size as needed
+        axes[i].set_yticks(y_ticks)
         
         # Highlight segments where count value is below the threshold for a continuous number of frames
         below_threshold = [j for j in range(len(y)) if y[j] < highlight_threshold]
@@ -83,7 +98,11 @@ def plot_counts_over_time(counts,groundtruth_count, save_path, n_subplots=1, hig
 
         # Set x-axis ticks to show only a subset of frames
         x_ticks = frames[start_idx:end_idx]
-        axes[i].set_xticks(x_ticks[::max(1, len(x_ticks)//10)])  # Show only 10 ticks or fewer
+        x_len=len(x_ticks)
+        step=  max(1, x_len // 10)
+        x_ticks_show= x_ticks[::step]
+        print(f" x_ticks_show: {x_ticks_show}")
+        axes[i].set_xticks(x_ticks_show)  
 
     # Hide any unused subplots
     for j in range(n_subplots, len(axes)):
@@ -118,8 +137,7 @@ def is_in_aoi(cx, cy, aoi, tolerance=1):
 
     return (x_min - tolerance <= cx <= x_max + tolerance) and \
            (y_min - tolerance <= cy <= y_max + tolerance)
-    
-            
+                
 # aoi : x_min, y_min, x_max, y_max  
 def count_in_aoi(labels_folder, aois, dw, dh):    
     aoi_dict={}
@@ -227,41 +245,49 @@ def aoi_count_framewise(labels_folder,aois,dw,dh):
     return aoi_counts,outside_aoi_count
 
 def frame_id_to_timestamp(frame_id,fps=24):
-    # Assuming 30 frames per second
+    
     seconds = frame_id / fps
     minutes = seconds // 60
     seconds = seconds % 60
     hours = minutes // 60
     minutes = minutes % 60
-    return f"{int(hours):02}:{int(minutes):02}:{seconds:02.0f}"
-def check_for_pipe_event(aoi_counts, counts, x=15):
+    return f"{int(minutes):02}:{seconds:02.0f}"
+
+def majority(iterable, fraction=0.90):
+    """
+    Returns True if the proportion of True values in the iterable
+    is >= fraction.
+    """
+    values = list(iterable)  
+    num_true = sum(values)   
+    return num_true >= fraction * len(values)
+
+def check_for_pipe_event(aoi_counts, counts, x=24):
     pipe_events = {"left": {}, "right": {}}
+    last_frame= max(counts.keys())
+    print(f"last_frame: {last_frame}")
     pipe_events["left"] = {key: 0 for key in aoi_counts["left"].keys()}
     pipe_events["right"] = {key: 0 for key in aoi_counts["right"].keys()}
     for i in range(1, len(counts) - x):
-        if all(i + j in counts and i in counts and counts[i] > counts[i + j] for j in range(1, x + 1)):
-            print(f"count decrease from frame {i} to frame {i + 1} ")
-            if all(aoi_counts["right"][i] > aoi_counts["right"][i + j] for j in range(1, x + 1)):
+        if majority((i + j in counts and i in counts and counts[i] > counts[i + j] for j in range(1, x + 1)),fraction=0.90):
+            #print(f"count decrease from frame {i} to frame {i + 1} ")
+            if majority((i + j in aoi_counts["right"] and i in aoi_counts["right"] and aoi_counts["right"][i] > aoi_counts["right"][i + j] for j in range(1, x + 1)), fraction=0.90):
                 print(f" Decrease in right AOI in frame {i} to frame {i + 1} --> {frame_id_to_timestamp(i)}")
-                if i + 1 not in pipe_events["right"]:
-                    pipe_events["right"][i + 1] = 0
                 pipe_events["right"][i + 1] += 1
-            if all(aoi_counts["left"][i] > aoi_counts["left"][i + j] for j in range(1, x + 1)):
+            if majority((i + j in aoi_counts["left"] and i in aoi_counts["left"] and aoi_counts["left"][i] > aoi_counts["left"][i + j] for j in range(1, x + 1)),fraction=0.90):
                 print(f" Decrease in left AOI in frame {i} to frame {i + 1}--> {frame_id_to_timestamp(i)}")
-                if i + 1 not in pipe_events["left"]:
-                    pipe_events["left"][i + 1] = 0
                 pipe_events["left"][i + 1] += 1
 
     return pipe_events
 
 def time_stamp_to_frame_id(time_stamp,fps=24):
     time = time_stamp.split(':')
-    print(f"time: {time}")
+    #print(f"time: {time}")
     minutes = int(time[0])
     seconds = int(time[1])
     frame_id = (minutes * 60 + seconds) * fps
     return frame_id
-def plot_pipe_events(pipe_events,gt_pipe_events, output_path):
+def plot_pipe_events(pipe_events,gt_pipe_events, output_path,precision,recall):
     frames_left = list(pipe_events["left"].keys())
     events_left = list(pipe_events["left"].values())
     frames_right = list(pipe_events["right"].keys())
@@ -273,18 +299,47 @@ def plot_pipe_events(pipe_events,gt_pipe_events, output_path):
   
     timestamps_left = list(frame_id_to_timestamp(i) for i in frames_with_events_left)
     timestamps_right = list(frame_id_to_timestamp(i) for i in frames_with_events_right)
-
-    
     # Count the number of instances where pipe events are not 0
-    non_zero_pipe_events_left = sum(1 for event in events_left if event != 0)
-    non_zero_pipe_events_right = sum(1 for event in events_right if event != 0)
+    non_zero_pipe_events_left =[event for event in events_left if event != 0]
+    non_zero_pipe_events_right = [event for event in events_right if event != 0]
+    non_zero_pipe_events_left_count = sum(event for event in events_left if event != 0)
+    non_zero_pipe_events_right_count = sum(event for event in events_right if event != 0)
+    # Remove duplicate timestamps and adjust events
+    unique_timestamps_left = {}
+    frames_with_events_left_adjusted = []
+    non_zero_pipe_events_left_adjusted = []
 
+    for frame, event, timestamp in zip(frames_with_events_left, non_zero_pipe_events_left, timestamps_left):
+        if timestamp in unique_timestamps_left:
+            # Add +1 to the corresponding event
+            non_zero_pipe_events_left_adjusted[unique_timestamps_left[timestamp]] += 1
+        else:
+            unique_timestamps_left[timestamp] = len(non_zero_pipe_events_left_adjusted)
+            frames_with_events_left_adjusted.append(frame)
+            non_zero_pipe_events_left_adjusted.append(event)
+    frames_with_events_left = frames_with_events_left_adjusted
+    non_zero_pipe_events_left = non_zero_pipe_events_left_adjusted
+    
+    # right aoi
+    unique_timestamps_right = {}
+    frames_with_events_right_adjusted = []
+    non_zero_pipe_events_right_adjusted = []
+    for frame, event, timestamp in zip(frames_with_events_right, non_zero_pipe_events_right, timestamps_right):
+        if timestamp in unique_timestamps_right:
+            # Add +1 to the corresponding event
+            non_zero_pipe_events_right_adjusted[unique_timestamps_right[timestamp]] += 1
+        else:
+            unique_timestamps_right[timestamp] = len(non_zero_pipe_events_right_adjusted)
+            frames_with_events_right_adjusted.append(frame)
+            non_zero_pipe_events_right_adjusted.append(event)
 
+    frames_with_events_right = frames_with_events_right_adjusted
+    non_zero_pipe_events_right = non_zero_pipe_events_right_adjusted
     
     plt.figure()
     plt.ylim(0, 5)
-    plt.scatter(frames_left, events_left, color='blue', label='Left AOI')
-    plt.scatter(frames_right, events_right, color='green', label='Right AOI')
+    plt.scatter(frames_with_events_left, non_zero_pipe_events_left,s=30,alpha=0.5, color='blue', label='Left AOI')
+    plt.scatter(frames_with_events_right, non_zero_pipe_events_right,s=30,alpha=0.5, color='green', label='Right AOI')
     plt.xlabel('Frame')
     plt.ylabel('Number of Pipe Events')
     plt.title('Pipe Events Detected Over Frames')
@@ -292,29 +347,44 @@ def plot_pipe_events(pipe_events,gt_pipe_events, output_path):
     plt.grid(True)
     
     # Add text for total number of events
-    plt.text(0.05, 0.95, f'Total Events in left AOI: {non_zero_pipe_events_left}', transform=plt.gca().transAxes, fontsize=12, verticalalignment='top', color='blue')
-    plt.text(0.05, 0.90, f'Total Events in right AOI: {non_zero_pipe_events_right}', transform=plt.gca().transAxes, fontsize=12, verticalalignment='top', color='green')
-    for i, txt in enumerate(timestamps_left):
-        print( i, txt)
-        y = 1.1 + (0.15*i)
+    plt.text(0.05, 0.95, f'Detected events left AOI: {non_zero_pipe_events_left_count}', transform=plt.gca().transAxes, fontsize=12, verticalalignment='top', color='blue')
+    plt.text(0.05, 0.90, f'Detected events in right AOI: {non_zero_pipe_events_right_count}', transform=plt.gca().transAxes, fontsize=12, verticalalignment='top', color='green')
+    plot_time = False
+    for i, (txt, event_left) in enumerate(zip(unique_timestamps_left, non_zero_pipe_events_left)):    
+        vorzeichen = -1 if i % 2 == 0 else 1
+        #y = 2.0 +  0.4 * math.sin(i)
+        y = event_left + +0.5 + 0.2* i
         x = frames_with_events_left[i]
-        print(f"frames_with_events_left[i], {frames_with_events_left[i]}")
+        #print(f"frames_with_events_left[i], {frames_with_events_left[i]}")
+        
         try:
-            plt.text(x,y, txt, fontsize=8, ha='center', color='blue')
+            if non_zero_pipe_events_left_count < 40 and non_zero_pipe_events_right_count < 40 and plot_time:
+                plt.text(x,y, txt, fontsize=8, ha='center', color='blue')
         except Exception as e:
             print(f"Error : {e}")
 
-    for i, txt in enumerate(timestamps_right):
-        y = 1.5 + (0.15*i)
+    for i, (txt, event_right) in enumerate(zip(unique_timestamps_right, non_zero_pipe_events_right)):
+        vorzeichen= -1**i #(0.15*vorzeichen)
+        #y = 3.5 + 0.4*math.sin(i)
+        y = event_right +0.5 + 0.2 *i
         x = frames_with_events_right[i]
-        
-        plt.text(x,y, txt, fontsize=8, ha='center', color='green')
+        if non_zero_pipe_events_right_count < 40 and non_zero_pipe_events_left_count < 40 and plot_time:
+            plt.text(x,y, txt, fontsize=8, ha='center', color='green')
     
     timestamps_x= [time_stamp_to_frame_id(time_stamp) for time_stamp in gt_pipe_events]
+    number_gt_pipe_events = len(gt_pipe_events)
+    plt.text(0.05, 0.85, f'Total ground truth events: {number_gt_pipe_events}', transform=plt.gca().transAxes, fontsize=12, verticalalignment='top', color='red')
     for i, txt in enumerate(gt_pipe_events):
-        y = 1.9 + (0.15*i)
+        vorzeichen = -1 if i % 2 == 0 else 1
+        #y = 3.0 + 0.5 * math.sin(i)*vorzeichen
+        y = 1 
         x = timestamps_x[i]
-        plt.text(x,y, txt, fontsize=8, ha='center', color='red')
+        plt.scatter(x, y, color='red', s=30,alpha=0.5, marker='o')
+        if plot_time:
+            ytxt =0.5 - 0.2 * vorzeichen
+            plt.text(x,ytxt, txt, fontsize=8, ha='center', color='red')
+    plt.text(0.05, 0.80, f'Recall: {recall} %', transform=plt.gca().transAxes, fontsize=12, verticalalignment='top', color='orange')
+    plt.text(0.05, 0.75, f'Precision: {precision} %', transform=plt.gca().transAxes, fontsize=12, verticalalignment='top', color='black')
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     plt.tight_layout()
     plt.savefig(output_path)
@@ -334,6 +404,36 @@ def plot_aoi_counts(aoi_counts, outside_aoi_count,ymax, save_path):
     plt.savefig(save_path)
     plt.show()
 
+def time_stamp_to_seconds(time_stamp):
+    """Converts a time stamp in the format MM:SS to total seconds."""
+    minutes, seconds = map(float, time_stamp.split(':'))
+    return minutes * 60 + seconds
+
+def compare_time_stamps(ground_truth, predicted, tolerance=2):
+    """
+    Compares two lists of time stamp strings. 
+    A predicted time stamp is considered a true prediction if it exactly matches
+    a ground truth time stamp or if it differs by at most 'tolerance' seconds.
+    
+    Returns:
+        true_predictions: List of predicted time stamps considered true predictions.
+        false_predictions: List of predicted time stamps that did not match.
+    """
+    true_predictions = []
+    false_predictions = []
+    
+    # Convert ground truth time stamps to seconds once
+    gt_seconds = [time_stamp_to_seconds(ts) for ts in ground_truth]
+    
+    for pred in predicted:
+        pred_sec = time_stamp_to_seconds(pred)
+        # Find any ground truth time stamp within the tolerance range (inclusive)
+        if any(abs(pred_sec - gt_sec) <= tolerance for gt_sec in gt_seconds):
+            true_predictions.append(pred)
+        else:
+            false_predictions.append(pred)
+    
+    return true_predictions, false_predictions
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--folder_path", required=True, help="Path to the folder containing the label files")
@@ -362,7 +462,7 @@ if __name__ == "__main__":
     if args.plot_type == 'percentage':
         plot_counts_percentage(counts, save_path=args.output_path)
     elif args.plot_type == 'count':
-        plot_counts_over_time(counts,ground_truth_counts, save_path=args.output_path,n_subplots=4, highlight_threshold=5, highlight_frames=highlight_frames, ncols=2)
+        plot_counts_over_time(counts,ground_truth_counts, save_path=args.output_path,n_subplots=2, highlight_threshold=5, highlight_frames=highlight_frames, ncols=2)
         
     elif args.plot_type == 'aoi':
         aois = args.aois
@@ -376,9 +476,44 @@ if __name__ == "__main__":
     elif args.plot_type== 'aoi_cb':
         gt_pipe_events=args.gt_pipe_events
         gt_pipe_events = [x[0] for x in gt_pipe_events]
-        print("gt_pipe_events",gt_pipe_events)
+        
         aois = args.aois
         aoi_counts,outside_aoi_count = aoi_count_framewise(folder_path,aois,args.dw, args.dh)
-        pipe_events=check_for_pipe_event(aoi_counts,counts)
-        plot_pipe_events(pipe_events,gt_pipe_events,args.output_path)
-        print(f"pipe_events,{pipe_events}")
+        xframes=18
+        pipe_events=check_for_pipe_event(aoi_counts,counts,xframes)
+        non_zero_pipe_events_left = {frame: event for frame, event in pipe_events["left"].items() if event != 0}
+        non_zero_pipe_events_right = {frame: event for frame, event in pipe_events["right"].items() if event != 0}
+        for frame, event in non_zero_pipe_events_left.items():
+            timestamp = frame_id_to_timestamp(frame)
+            print(f"Left AOI - Frame {frame} ({timestamp}): {event} events")
+        for frame, event in non_zero_pipe_events_right.items():
+            timestamp = frame_id_to_timestamp(frame)
+            print(f"Right AOI - Frame {frame} ({timestamp}): {event} events")
+            
+        print("gt_pipe_events",gt_pipe_events)
+        print(f"pipe_events_left: {non_zero_pipe_events_left}")
+        print(f"pipe_events_right: {non_zero_pipe_events_right}")
+        
+        true_right, false_right = compare_time_stamps(gt_pipe_events, [frame_id_to_timestamp(frame) for frame in non_zero_pipe_events_right.keys()], tolerance=2)
+        true_left, false_left = compare_time_stamps(gt_pipe_events, [frame_id_to_timestamp(frame) for frame in non_zero_pipe_events_left.keys()], tolerance=2)
+        tp=len(true_right) + len(true_left)
+        fp=len(false_right) + len(false_left)
+        
+        print(f"True right: {true_right}")
+        print(f"True left: {true_left}")
+        print(f"True positives: {tp}")
+        print(f"False positives: {fp}")
+        fn = len(gt_pipe_events) - tp
+        print(f"False negatives: {fn}")
+        precision = tp / (tp + fp)
+        precision = round(precision * 100, 2)
+        recall = tp / (tp + fn)
+        recall = round(recall * 100, 2)
+        print(f"Precision: {precision}")
+        print(f"Recall: {recall}")
+        if args.output_path.endswith('.png'):
+            output = args.output_path.replace('.png', f'_{xframes}.png')
+        else:
+            output = args.output_path 
+        plot_pipe_events(pipe_events,gt_pipe_events,output,precision,recall)
+        #print(f"pipe_events,{pipe_events}")

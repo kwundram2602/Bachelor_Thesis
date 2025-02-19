@@ -39,16 +39,24 @@ yh=$HOME/bcth/Bachelor_Thesis/yolov7/
 
 #batch=B1D1_C2_BE_c
 #source=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/Batch1/B1D1/$batch
-source=/scratch/tmp/kwundram/bcth/data/whole_data/converted/overtime_labeled/pngs
+source=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/for_over_time_gt/B1D3_C3_OE_c_1_min_st35
 # pre trained weights (own or yolo weights)
 weights=/scratch/tmp/kwundram/bcth/runs/train/20.01.2025/bc_th_train_ep180_img1024_t23:20:51/weights/best.pt
 
 # parent folder for detection 
-project=/scratch/tmp/kwundram/bcth/data/whole_data/converted/overtime_labeled
+project=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/for_over_time_gt
 conf=0.5
 name=detected_labels
+aois=("50 480 1200 950")
+# parse aois to string
+aoi_args=()
+for aoi in "${aois[@]}"; do
+    aoi_args+=("--aoi $aoi")
+done
+
+aoi_args_string=$(IFS=" "; echo "${aoi_args[*]}")
 
 # sbatch $HOME/bcth/Bachelor_Thesis/Bashfiles/yolo/detect.sh
-python "$yh"detect.py --weights "$weights" --conf $conf --img-size 1024 --source "$source" --save-txt --project "$project" --name "$name"
+python "$yh"detect_aoi.py --weights "$weights" $aoi_args_string --conf $conf --img-size 1024 --source "$source" --save-txt --project "$project" --name "$name"
 conda deactivate
 module purge

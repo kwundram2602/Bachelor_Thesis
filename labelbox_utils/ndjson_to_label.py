@@ -104,7 +104,7 @@ def extract_labels_video(ndjson,project_id,video_batches):
                     frame=frames[f"{i}"]
                     print("frame",frame)
                     objects=frame["objects"]
-                    frame_number=pad_with_zeroes(4,i)
+                    frame_number=pad_with_zeroes(5,i)
                     label_file = external_id_we+"_frame_"+frame_number+".txt"
                     output_txt=os.path.join(video_batches,external_id_we,label_file)
                     print("output_txt",output_txt)
@@ -120,14 +120,16 @@ if __name__ == "__main__":
     parser.add_argument('--output_folder', type=str, required=True, help='Output directory for label text files')
     parser.add_argument('--pngs', type=str, required=False, help='folder path with extracted frames')
     parser.add_argument('--video', action="store_true", help='use if video type annotation')
-
+    parser.add_argument('--proj_id', type=str, help='Project ID')
+    
     args = parser.parse_args()
     ndjson=args.ndjson
+    proj_id=args.proj_id  # "cm36zp4ob06np07x517036l5b" "cm3zzwwe5013507xg40mg2ubu"
     output_folder=args.output_folder
     pngs=args.pngs
-    video=args.video
+    video=args.video 
     if video:
-        extract_labels_video(ndjson,"cm36zp4ob06np07x517036l5b",output_folder)
+        extract_labels_video(ndjson,proj_id,output_folder)
     else:
-        extract_labels(ndjson,"cm3zzwwe5013507xg40mg2ubu",output_folder,pngs)
+        extract_labels(ndjson,proj_id,output_folder,pngs)
     

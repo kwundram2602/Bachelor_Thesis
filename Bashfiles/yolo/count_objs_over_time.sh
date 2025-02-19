@@ -37,12 +37,12 @@ videoname="$batch_day"_C1_ST #  C1_ST, C2_BE, C3_OE
 
 # detected labels
 #folder_path=/scratch/tmp/kwundram/bcth/runs/detect_count_over_time/"$videoname"_c_10_min_0.4/labels
-folder_path=/scratch/tmp/kwundram/bcth/data/whole_data/converted/overtime_labeled/detected_labels/labels
+folder_path=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/for_over_time_gt/interpolated_labels
 # output folder for plot
-output_folder=/scratch/tmp/kwundram/bcth/data/whole_data/converted/overtime_labeled
+output_folder=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/for_over_time_gt
 #output_folder=/scratch/tmp/kwundram/bcth/data/whole_data/count_objs/over_time/$videoname
 # ground truth labels
-ground_truth=/scratch/tmp/kwundram/bcth/data/whole_data/converted/overtime_labeled/real_labels
+ground_truth=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/for_over_time_gt/real_labels
 
 # 120 frames =5 sec
 # 180 frames =7.5 sec
