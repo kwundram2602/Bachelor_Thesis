@@ -44,6 +44,20 @@ fi
 if [ ! -d ./deleted_bbox ]; then
     mkdir ./deleted_bbox
 fi
+#aoi_filtered
+if [ ! -d ./aoi_filtered ]; then
+    mkdir ./aoi_filtered
+fi
+# x_min, y_min, x_max, y_max  : 
+# rectangle spans horizontally from x_min to x_max and vertically from y_min to y_max
+# B1D3_C3_OE
+aois=("80 480 1180 850")   
+# parse aois to string
+aoi_args=()
+for aoi in "${aois[@]}"; do
+    aoi_args+=("--aoi $aoi")
+done
+aoi_args_string=$(IFS=" "; echo "${aoi_args[*]}")
 
-python $script --label_folder $label_folder --output_folder $output_folder --pngs_dir $detections
+python $script --label_folder $label_folder --output_folder $output_folder --pngs_dir $detections $aoi_args_string
 # sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/yolo/interpolate_detections.py.sh

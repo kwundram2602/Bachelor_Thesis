@@ -187,9 +187,10 @@ def plot_yolo_line(det,image_path,output_path):
 
     cv2.rectangle(img, (l, t), (r, b), (0, 0, 255), 1)
 
-    plt.imshow(img)
-    plt.tight_layout()
-    plt.savefig(output_path)
+    cv2.imwrite(output_path, img)
+    #plt.imshow(img)
+    #plt.tight_layout()
+    #plt.savefig(output_path)
     
 def plot_bbox_to_image(image_path:str,label_path:str,output_path:str):
     """
@@ -261,7 +262,7 @@ def remove_sixth_det(detections,labels,pngs_dir,dw,dh):
             
     return detections
                     
-def filter_by_aoi(aoi,detections,dw,dh,image_path=None,output_path=None):
+def filter_by_aoi(aoi,detections,label_files,dw,dh,png_dir):
     """
     Filter detections by Area of Interest
     aoi: tuple (x_min, y_min, x_max, y_max)
@@ -271,25 +272,36 @@ def filter_by_aoi(aoi,detections,dw,dh,image_path=None,output_path=None):
     output_path: path to show the bounding box outside the aoi
     """
     x_min, y_min, x_max, y_max = aoi
-    if image_path is not None:
-        im0 = cv2.imread(image_path)
-        cv2.rectangle(im0, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
-        
+    print(f"x_min, y_min, x_max, y_max in filter_by_aoi: {x_min, y_min, x_max, y_max}")
     filtered_detections = []
-    for frame_det in detections:
+    for i,frame_det in enumerate(detections):
+        
         fitered_frame_det = []
         for det in frame_det:
             _, x, y, w, h = det
             l, r, t, b = yolo_to_image_coordinates(x, y, w, h, dw, dh)
             center_x = (l + r) / 2
             center_y = (t + b) / 2
-
+            # center of bounding box is inside the aoi
             if x_min <= center_x <= x_max and y_min <= center_y <= y_max:
                 print(f"det  center_x, center_y :{center_x, center_y} is inside aoi {aoi}")
                 fitered_frame_det.append(det)
+            # center of bounding box is outside the aoi
             else:
-                if output_path is not None:
-                    plot_yolo_line(det,image_path,output_path)
+                label_file = label_files[i]
+                filename = os.path.basename(label_file)
+                image = filename.replace(".txt",".png")
+                image_path = os.path.join(png_dir,image)
+                im0 = cv2.imread(image_path)
+                
+                output=os.path.join(png_dir,"aoi_filtered",image.replace(".png","aoi_filtered.png"))
+                # plot filtered bounding box to image for checking
+                plot_yolo_line(det,image_path,output)
+                im0=cv2.imread(output)
+                if im0 is None:
+                    raise ValueError("Image not found or unable to load image from path: " + output)
+                im1=cv2.rectangle(im0, (x_min, y_min), (x_max, y_max), (0, 0, 255), thickness=4)
+                cv2.imwrite(output, im1)
                 
         filtered_detections.append(fitered_frame_det)
     return filtered_detections      
@@ -320,12 +332,14 @@ if __name__ == "__main__":
 
     all_detections = [read_yolo_file(f) for f in sorted(label_files)]
     print(all_detections[:10])
-    aoi = args.aoi
-    filtered_detections = filter_by_aoi((0,0,1280,1024),all_detections)
+    aoi = args.aoi[0]
+    print(f"aoi: {aoi}")
+    pngs_dir = args.pngs_dir
+    filtered_detections = filter_by_aoi(aoi,all_detections,sorted(label_files),1280,1024,pngs_dir)
     
     # Remove the sixth detection if it exists
-    pngs_dir = args.pngs_dir
-    all_detections = remove_sixth_det(all_detections,sorted(label_files),pngs_dir,1280,1024)
+    
+    all_detections = remove_sixth_det(filtered_detections,sorted(label_files),pngs_dir,1280,1024)
 
     number_changed_files= 0
     for i in range(0,len(all_detections)-2):
