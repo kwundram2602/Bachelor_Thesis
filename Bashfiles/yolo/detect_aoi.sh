@@ -33,13 +33,15 @@ conda activate $HOME/envs/bc_th
 yh=$HOME/bcth/Bachelor_Thesis/yolov7/
 # video batch and folder with extracted images as source for detection
 
-batch=Batch2
-batch_day=B2D3 # B1D1, B1D3, B2D2, B2D3
+batch=Batch1
+batch_day=B1D1 # B1D1, B1D3, B2D2, B2D3
 camera=C3
 suffix=OE  # BE (C2) or OE (C3)
-videoname="$batch_day"_"$camera"_"$suffix"_c
+conf=0.5
+videoname="$batch_day"_"$camera"_"$suffix"_c_10_min
+
 #videoname=test_"$batch_day"_"$camera"
-source=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/first_x_min/$batch/$batch_day/"$batch_day"_"$camera"_"$suffix"_c_10_min
+#source=/scratch/tmp/kwundram/bcth/data/whole_data/converted/extr_images/first_x_min/$batch/$batch_day/"$batch_day"_"$camera"_"$suffix"_c_10_min
 #source=/scratch/tmp/kwundram/bcth/data/whole_data/test_extr_images/
 # pre trained weights (own or yolo weights)
 weights=/scratch/tmp/kwundram/bcth/runs/train/20.01.2025/bc_th_train_ep180_img1024_t23:20:51/weights/best.pt
@@ -47,10 +49,11 @@ weights=/scratch/tmp/kwundram/bcth/runs/train/20.01.2025/bc_th_train_ep180_img10
 day=`date +%d.%m.%Y`
 time=`date +%H:%M:%S`
 # parent folder for detection tests on trained models ( not only pretrained yolov7)
-project=/scratch/tmp/kwundram/bcth/runs/detect_aoi/$batch_day/$day/
+#project=/scratch/tmp/kwundram/bcth/runs/detect_aoi/$batch_day/$day/
+project=/scratch/tmp/kwundram/bcth/runs/detect_heatmap
 # parent folder for detection (only when using yolo weights)
 #project=/scratch/tmp/kwundram/bcth/runs/detect
-conf=0.4
+
 
 # x_min, y_min, x_max, y_max  :Y is width and X is height
 # B1D1
@@ -97,18 +100,18 @@ for aoi in "${aois[@]}"; do
 done
 
 aoi_args_string=$(IFS=" "; echo "${aoi_args[*]}")
-name="${videoname}_conf${conf}_$time"
+name="${videoname}_${conf}"
 
 # sbatch $HOME/bcth/Bachelor_Thesis/Bashfiles/yolo/detect_aoi.sh
 image_size=1024
 #python "$yh"detect_aoi.py --weights "$weights" $aoi_args_string --conf $conf --img-size $image_size --source "$source" --save-txt --project "$project" --name "$name"
 
-#label_folder=$project/$name/labels
-label_folder=/scratch/tmp/kwundram/bcth/runs/detect_aoi/B2D3/23.01.2025/B2D3_C3_OE_c_conf0.4_11:00:42/labels
-count=/home/k/kwundram/bcth/Bachelor_Thesis/yolo_count/count_objs_over_time.py
+label_folder=$project/$name/interpolated_labels
+#label_folder=/scratch/tmp/kwundram/bcth/runs/detect_heatmap/B1D1_C2_BE_c_10_min_0.5/interpolated_labels
+script=/home/k/kwundram/bcth/Bachelor_Thesis/yolo_count/count_objs_over_time.py
 
 output_path=/scratch/tmp/kwundram/bcth/data/whole_data/count_objs/aoi/$day/$name/"$videoname"_aoi.png
-python $count --folder_path $label_folder  --output_path $output_path --dw 1280 --dh $image_size --plot_type aoi $aoi_args_string
+python $script --folder_path $label_folder  --output_path $output_path --dw 1280 --dh $image_size --plot_type aoi $aoi_args_string
 
 conda deactivate
 module purge

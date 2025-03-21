@@ -34,7 +34,20 @@ script=/home/k/kwundram/bcth/Bachelor_Thesis/yolo_utils/track.py
 #detections=/scratch/tmp/kwundram/bcth/runs/detect_heatmap/B1D3_C3_OE_c_10_min_0.5
 
 #label_folder=$detections/labels # real labels
-label_folder=/scratch/tmp/kwundram/bcth/runs/test_track/labels
-pngs=/scratch/tmp/kwundram/bcth/runs/test_track/pngs
-python $script --label_folder $label_folder --pngs $pngs
+detections=/scratch/tmp/kwundram/bcth/runs/detect_heatmap/B1D3_C3_OE_c_10_min_0.5
+label_folder=$detections/interpolated_labels
+output_folder=$detections/labels_del_short 
+#label_folder=/scratch/tmp/kwundram/bcth/runs/test_track/labels
+#pngs=/scratch/tmp/kwundram/bcth/runs/test_track/pngs
+pngs=$detections
+
+cd $pngs
+if [ ! -d ./tracked ]; then
+    mkdir ./tracked
+fi
+if [ ! -d ./labels_del_short ]; then
+    mkdir ./labels_del_short
+fi
+#cp -a "$label_folder/*" "$output_folder/"
+python $script --label_folder $label_folder --pngs $pngs --output_folder $output_folder
 # sbatch /home/k/kwundram/bcth/Bachelor_Thesis/Bashfiles/yolo/track.sh

@@ -39,22 +39,25 @@ def plot_counts_percentage(counts, save_path):
     plt.savefig(save_path)
     plt.show()
 
-def plot_counts_over_time(counts,groundtruth_count, save_path, n_subplots=1, highlight_threshold=5, highlight_frames=48, ncols=2):
+def plot_counts_over_time(counts,groundtruth_count,gt_pipe_events, save_path, n_subplots=3, highlight_threshold=5, highlight_frames=48, ncols=2):
     """
     Plots the number of detected objects framewise and compares woth ground truth if available."""
     #print(f"First {20} elements of counts: {list(counts.keys())[:20]}")
     frames = list(counts.keys())    
     print(f"first 10 frames: {frames[:10]}")
     counts_values = list(counts.values())
-    ground_truth_counts_values = list(groundtruth_count.values())
-    print(f"ground_truth_counts_values in function: {ground_truth_counts_values[:10]}")
+    if groundtruth_count:
+        ground_truth_counts_values = list(groundtruth_count.values())
+        print(f"ground_truth_counts_values in function: {ground_truth_counts_values[:10]}")
     total_frames = len(frames)
     frames_per_subplot = total_frames // n_subplots
-
+    if gt_pipe_events:
+        frame_ids_gtpe_x= [time_stamp_to_frame_id(time_stamp) for time_stamp in gt_pipe_events]
     nrows = (n_subplots + ncols - 1) // ncols  # Calculate the number of rows needed
     fig, axes = plt.subplots(nrows, ncols, figsize=(10 * ncols, 5 * nrows), sharex=False)
     axes = axes.flatten()  # Flatten the axes array for easy iteration
     # 0 ... n_subplots - 1
+    segment_dict ={i:[] for i in range (n_subplots)}
     for i in range(n_subplots):
         
         # start index of plot
@@ -65,7 +68,8 @@ def plot_counts_over_time(counts,groundtruth_count, save_path, n_subplots=1, hig
         # frame ids and counts as plot variables
         x = frames[start_idx:end_idx]
         y = counts_values[start_idx:end_idx]
-        y_gt = ground_truth_counts_values[start_idx:end_idx]
+        if groundtruth_count:
+            y_gt = ground_truth_counts_values[start_idx:end_idx]
 
         axes[i].plot(x, y, marker='o', linestyle='-', linewidth=0.5, markersize=1, color='blue')
         if groundtruth_count:
@@ -74,9 +78,15 @@ def plot_counts_over_time(counts,groundtruth_count, save_path, n_subplots=1, hig
         axes[i].set_ylabel('Number of Objects')
         axes[i].set_title(f'Number of Objects Detected Over Frames (Part {i + 1})')
         axes[i].grid(True)
-        y_ticks = range(0, 7, 1)  # Adjust the step size as needed
+        y_ticks = range(0, 9, 1)  # Adjust the step size as needed
         axes[i].set_yticks(y_ticks)
-        
+        if gt_pipe_events:
+            for j, txt in enumerate(gt_pipe_events):
+                if frame_ids_gtpe_x[j] >= start_idx and frame_ids_gtpe_x[j] <= end_idx:
+                    
+                    axes[i].scatter(frame_ids_gtpe_x[j], 1, color="green", s=40, alpha=0.5, marker='o')
+                    #axes[i].text(timestamps_gtpe_x[j], 0, txt, fontsize=8, ha='center', color='red')
+            
         # Highlight segments where count value is below the threshold for a continuous number of frames
         below_threshold = [j for j in range(len(y)) if y[j] < highlight_threshold]
         segments = []
@@ -93,9 +103,13 @@ def plot_counts_over_time(counts,groundtruth_count, save_path, n_subplots=1, hig
         if len(current_segment) >= highlight_frames:
             segments.append(current_segment)
 
-        for segment in segments:
-            axes[i].plot([x[j] for j in segment], [y[j] for j in segment], marker='o', linestyle='-', linewidth=0.5, markersize=1, color='red')
-
+        for id,segment in enumerate(segments):
+            color = 'black' if id % 2 == 0 else 'red'
+            axes[i].plot([x[j] for j in segment], [y[j] for j in segment], marker='o', linestyle='-', linewidth=0.5, markersize=1, color=color)
+        segment_dict[i] = [list(map(lambda x: x + start_idx-1, segment)) for segment in segments]
+        
+        
+        
         # Set x-axis ticks to show only a subset of frames
         x_ticks = frames[start_idx:end_idx]
         x_len=len(x_ticks)
@@ -103,10 +117,38 @@ def plot_counts_over_time(counts,groundtruth_count, save_path, n_subplots=1, hig
         x_ticks_show= x_ticks[::step]
         print(f" x_ticks_show: {x_ticks_show}")
         axes[i].set_xticks(x_ticks_show)  
-
+    print(f"segement_dict: {segment_dict}")
     # Hide any unused subplots
     for j in range(n_subplots, len(axes)):
         fig.delaxes(axes[j])
+    
+    segment_ids=set()
+    
+    n_pred=0
+    if gt_pipe_events:
+        n_gt_positives=len(frame_ids_gtpe_x)
+    tp= 0
+    for segments_i in segment_dict.values():
+        n_pred+=len(segments_i)
+        for segment in segments_i:
+            for segment_id in segment:
+                segment_ids.add(segment_id)
+    
+    if gt_pipe_events:              
+        for frame_id in frame_ids_gtpe_x:
+            for segment_id in segment_ids:
+                if frame_id == segment_id:
+                    tp += 1
+        fn= n_gt_positives - tp
+        print("n pred :", n_pred)
+        fp = n_pred - tp
+        precision = tp / (tp + fp)
+        precision = round(precision * 100, 2)
+        recall = tp / (tp + fn)
+        recall = round(recall * 100, 2)
+        plt.text(0.05, 1.1, f'Recall: {recall} %', transform=plt.gca().transAxes, fontsize=12, verticalalignment='top', color='orange')
+        plt.text(0.05, 1.05, f'Precision: {precision} %', transform=plt.gca().transAxes, fontsize=12, verticalalignment='top', color='black')
+        
 
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     plt.tight_layout()
@@ -131,6 +173,7 @@ def yolo_to_image_coordinates(line, dw, dh):
     if b > dh - 1:
         b = dh - 1
     return l, r, t, b
+# returns true if the center of the object is within the area of interest
 def is_in_aoi(cx, cy, aoi, tolerance=1):
     
     x_min, y_min, x_max, y_max = aoi
@@ -139,6 +182,7 @@ def is_in_aoi(cx, cy, aoi, tolerance=1):
            (y_min - tolerance <= cy <= y_max + tolerance)
                 
 # aoi : x_min, y_min, x_max, y_max  
+# count objects in AOI
 def count_in_aoi(labels_folder, aois, dw, dh):    
     aoi_dict={}
     if aois[0][0] < aois[1][0]:
@@ -271,10 +315,10 @@ def check_for_pipe_event(aoi_counts, counts, x=24):
     for i in range(1, len(counts) - x):
         if majority((i + j in counts and i in counts and counts[i] > counts[i + j] for j in range(1, x + 1)),fraction=0.90):
             #print(f"count decrease from frame {i} to frame {i + 1} ")
-            if majority((i + j in aoi_counts["right"] and i in aoi_counts["right"] and aoi_counts["right"][i] > aoi_counts["right"][i + j] for j in range(1, x + 1)), fraction=0.90):
+            if majority((i + j in aoi_counts["right"] and i in aoi_counts["right"] and aoi_counts["right"][i] > aoi_counts["right"][i + j] for j in range(1, x + 1)), fraction=0.85):
                 print(f" Decrease in right AOI in frame {i} to frame {i + 1} --> {frame_id_to_timestamp(i)}")
                 pipe_events["right"][i + 1] += 1
-            if majority((i + j in aoi_counts["left"] and i in aoi_counts["left"] and aoi_counts["left"][i] > aoi_counts["left"][i + j] for j in range(1, x + 1)),fraction=0.90):
+            if majority((i + j in aoi_counts["left"] and i in aoi_counts["left"] and aoi_counts["left"][i] > aoi_counts["left"][i + j] for j in range(1, x + 1)),fraction=0.85):
                 print(f" Decrease in left AOI in frame {i} to frame {i + 1}--> {frame_id_to_timestamp(i)}")
                 pipe_events["left"][i + 1] += 1
 
@@ -390,19 +434,31 @@ def plot_pipe_events(pipe_events,gt_pipe_events, output_path,precision,recall):
     plt.savefig(output_path)
     #plt.show()
    
-def plot_aoi_counts(aoi_counts, outside_aoi_count,ymax, save_path):
-    labels = list(aoi_counts.keys()) + ['Outside AOIs']
-    counts = list(aoi_counts.values()) + [outside_aoi_count]
+def plot_aoi_counts(aoi_counts, outside_aoi_count, ymax, save_path):
+    labels = list(aoi_counts.keys()) #+ ['Outside AOIs']
+    counts = list(aoi_counts.values())# + [outside_aoi_count]
 
     plt.figure()
-    plt.bar(labels, counts, color=['blue', 'green', 'red'])
-    plt.xlabel('AOI')
-    plt.ylabel('Number of Objects')
-    plt.title('Number of Objects Detected in Each AOI')
-    plt.ylim(top= ymax) 
+
+    # Create the bar plot and keep a handle to the BarContainer object (bars)
+    bars = plt.bar(labels, counts, color=['blue', 'red']) # + red
+
+    # Optionally set the font sizes for axis labels, title, and ticks
+    plt.xlabel('AOI', fontsize=14)
+    plt.ylabel('Number of Objects', fontsize=14)
+    plt.title('Number of Objects Detected in Each AOI', fontsize=16)
+    plt.xticks(rotation=45, fontsize=12)
+    plt.yticks(fontsize=12)
+    plt.ylim(top=ymax)
+
+    # Label each bar with its corresponding value and set the font size
+    plt.bar_label(bars, labels=[str(c) for c in counts], fontsize=14, label_type='edge')
+
+    # Adjust layout so labels don’t get cut off
     plt.tight_layout()
+
+    # Save and show the plot
     plt.savefig(save_path)
-    plt.show()
 
 def time_stamp_to_seconds(time_stamp):
     """Converts a time stamp in the format MM:SS to total seconds."""
@@ -437,7 +493,7 @@ def compare_time_stamps(ground_truth, predicted, tolerance=2):
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--folder_path", required=True, help="Path to the folder containing the label files")
-    argparser.add_argument("--ground_truth", required=False, help="Path to ground truth folder")
+    argparser.add_argument("--ground_truth", required=False, default=None, help="Path to ground truth folder")
     argparser.add_argument("--output_path", required=True, help="Path to the output file")
     argparser.add_argument("--plot_type", required=True, choices=['percentage', 'count','aoi_cb','aoi'], help="Type of plot to generate")
     argparser.add_argument("--highlight_threshold", type=int, default=5, help="Threshold for highlighting segments")
@@ -462,7 +518,11 @@ if __name__ == "__main__":
     if args.plot_type == 'percentage':
         plot_counts_percentage(counts, save_path=args.output_path)
     elif args.plot_type == 'count':
-        plot_counts_over_time(counts,ground_truth_counts, save_path=args.output_path,n_subplots=2, highlight_threshold=5, highlight_frames=highlight_frames, ncols=2)
+        gt_pipe_events=args.gt_pipe_events
+        if gt_pipe_events:
+            gt_pipe_events = [x[0] for x in gt_pipe_events]
+        print(f"gt_pipe_events: {gt_pipe_events}")
+        plot_counts_over_time(counts,ground_truth_counts,gt_pipe_events, save_path=args.output_path,n_subplots=1, highlight_threshold=5, highlight_frames=highlight_frames, ncols=2)
         
     elif args.plot_type == 'aoi':
         aois = args.aois
@@ -479,7 +539,7 @@ if __name__ == "__main__":
         
         aois = args.aois
         aoi_counts,outside_aoi_count = aoi_count_framewise(folder_path,aois,args.dw, args.dh)
-        xframes=18
+        xframes=48
         pipe_events=check_for_pipe_event(aoi_counts,counts,xframes)
         non_zero_pipe_events_left = {frame: event for frame, event in pipe_events["left"].items() if event != 0}
         non_zero_pipe_events_right = {frame: event for frame, event in pipe_events["right"].items() if event != 0}

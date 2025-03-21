@@ -31,7 +31,7 @@ conda activate $HOME/envs/bc_th
 script=/home/k/kwundram/bcth/Bachelor_Thesis/yolo_count/count_objs_over_time.py
 
 # just change videoname and maybe conf
-batch_day=B1D3
+batch_day=B1D1
 camera=C3  # C1_ST, C2_BE, C3_OE
 videoname="$batch_day"_"$camera"_OE #  
 # detected labels
@@ -49,7 +49,7 @@ if [ "$batch_day" == "B1D1" ]; then
 
     elif [ "$camera" == "C3" ]; then
         aois=("155 670 255 870" "670 670 770 870") # works
-        gt_pipe_events=("0:05" "2:05" "2:33" "3:48" "3:56" "6:29" "6:33" "9:17" "9:42" "9:45" "9:46" "9:51" "9:57")
+        gt_pipe_events=("0:05" "2:05" "2:33" "2:47" "3:48" "3:56" "6:23" "6:29" "6:32" "6:33" "9:17" "9:42" "9:45" "9:46" "9:51" "9:57")
     else
         aois=("0 0 1280 1024")
     fi

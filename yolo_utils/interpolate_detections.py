@@ -91,8 +91,8 @@ def pixel_distance_matrix_one_frame(dets, dw, dh):
     return distances
 def match_bounding_boxes_hungarian(detsA, detsB, dw, dh, max_dist=None):
     """
-    Match bounding boxes using the Hungarian algorithm (global optimum).
-    - If max_dist is set, any pair above that distance is left unmatched.
+    Match bounding boxes using the Hungarian algorithm.
+    If max_dist is set, any pair above that distance is left unmatched.
     Returns dict: index_in_A -> index_in_B (or None if unmatched).
     """
     nA, nB = len(detsA), len(detsB)
@@ -100,16 +100,20 @@ def match_bounding_boxes_hungarian(detsA, detsB, dw, dh, max_dist=None):
         return {}
     
     cost = pixel_distance_matrix(detsA, detsB, dw, dh)
-    row_ind, col_ind = linear_sum_assignment(cost)  # Minimizes total distance
+    # returns the indices of the optimal assignment
+    row_ind, col_ind = linear_sum_assignment(cost)  
     
     # Build the assignment
-    matches = {i: None for i in range(nA)}  # default unmatched
+    # first dets in detsA dont have a match
+    matches = {i: None for i in range(nA)}
+    # rows and columns are matched
     for i, r in enumerate(row_ind):
         c = col_ind[i]
         dist_ij = cost[r, c]
         if max_dist is not None and dist_ij > max_dist:
-            # too far, remain unmatched
+            print(f"Distance {dist_ij} exceeds max_dist {max_dist} for {detsA[r]} and {detsB[c]}")
             continue
+        # row r is matched to column c
         matches[r] = c
     # Remove unmatched entries
     matches = {k: v for k, v in matches.items() if v is not None}
@@ -244,19 +248,21 @@ def remove_sixth_det(detections,labels,pngs_dir,dw,dh):
     """
     """
     for i,frame_det in enumerate(detections):
-        if len(frame_det) == 6:
+        while len(frame_det) > 5:
             distances = pixel_distance_matrix_one_frame(frame_det, dw, dh)
             # Find the pair with the smallest distance
             z, j = get_non_zero_min(distances)
             # Remove the box with the smaller area
             if compute_bb_area(frame_det[z], dw, dh) < compute_bb_area(frame_det[j], dw, dh):
                 plot_removed_boxes(labels[i],frame_det[z],pngs_dir)
-                frame_det.pop(z)
                 print(f"Removed box {frame_det[z]}")
+                frame_det.pop(z)
+                
             else:
                 plot_removed_boxes(labels[i],frame_det[j],pngs_dir)
-                frame_det.pop(j)
                 print(f"Removed box {frame_det[j]}")
+                frame_det.pop(j)
+                
             detections[i] = frame_det
             print(f"Removed box from frame {i+1} [{labels[i]}]")
             
@@ -276,6 +282,9 @@ def filter_by_aoi(aoi,detections,label_files,dw,dh,png_dir):
     filtered_detections = []
     for i,frame_det in enumerate(detections):
         
+        if len(frame_det) < 6:
+            filtered_detections.append(frame_det)
+            continue
         fitered_frame_det = []
         for det in frame_det:
             _, x, y, w, h = det
@@ -292,6 +301,7 @@ def filter_by_aoi(aoi,detections,label_files,dw,dh,png_dir):
                 filename = os.path.basename(label_file)
                 image = filename.replace(".txt",".png")
                 image_path = os.path.join(png_dir,image)
+                print("image path:", image_path)
                 im0 = cv2.imread(image_path)
                 
                 output=os.path.join(png_dir,"aoi_filtered",image.replace(".png","aoi_filtered.png"))
@@ -335,12 +345,13 @@ if __name__ == "__main__":
     aoi = args.aoi[0]
     print(f"aoi: {aoi}")
     pngs_dir = args.pngs_dir
+    print(f"length before aoi : {len(all_detections)}")
     filtered_detections = filter_by_aoi(aoi,all_detections,sorted(label_files),1280,1024,pngs_dir)
     
     # Remove the sixth detection if it exists
-    
+    print(f"length before remove sixth : {len(filtered_detections)}")
     all_detections = remove_sixth_det(filtered_detections,sorted(label_files),pngs_dir,1280,1024)
-
+    print(f"length after remove sixth : {len(all_detections)}")
     number_changed_files= 0
     for i in range(0,len(all_detections)-2):
         # Count of detections in frames i, i+1, i+2
