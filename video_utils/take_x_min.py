@@ -3,6 +3,11 @@ import argparse
 import subprocess
 
 
+
+
+"""
+Extracts a segment of the video with a specified duration starting from a given point.
+"""
 def take_x_min(duration, input, output_path, start_point=0):
     """
     Extracts a segment of the video with a specified duration starting from a given point.

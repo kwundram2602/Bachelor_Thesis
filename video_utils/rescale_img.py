@@ -2,6 +2,10 @@ import os
 from PIL import Image
 import argparse
 
+
+"""
+rescales images in a folder to a given resolution
+"""
 def rescale_images(input_folder, output_folder, target_resolution):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)

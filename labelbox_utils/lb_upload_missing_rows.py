@@ -8,7 +8,9 @@ import logging
 import uuid
 
 
-
+"""
+script for uploading missing rows to labelbox
+"""
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot bounding box to image.')
     parser.add_argument('--ndjson_path', type=str, required=True, help='path to ndjson. for reading gloabl key and external id')

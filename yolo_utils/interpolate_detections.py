@@ -6,6 +6,12 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import linear_sum_assignment
+
+
+"""
+interpolation script
+contains matching functions
+"""
 def yolo_to_image_coordinates(x, y, w, h, dw, dh):
    
     l = int((x - w / 2) * dw)

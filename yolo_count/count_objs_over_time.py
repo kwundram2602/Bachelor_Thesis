@@ -4,7 +4,10 @@ import matplotlib
 import matplotlib.pyplot as plt
 import re
 import math
-
+"""
+One of the main scripts. For counting in AOIs, for counting object counts over time,
+and for pipe events. (and  plots)
+"""
 def count_objects_in_folder(folder_path):
     """
     Counts the number of detected objects for each frame label .txt file in folder path.

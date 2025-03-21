@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 import logging
 import os
 import argparse
-
+"""
+plot yolo results. (map, precision, recall)
+"""
 # Function to parse the text file and extract relevant data
 def parse_file(file_path):
     # Read the file into a pandas DataFrame

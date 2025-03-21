@@ -2,6 +2,10 @@ import os
 from sklearn.model_selection import train_test_split
 import argparse
 
+
+"""
+scriptfor writing absolute paths of all three sets to txt files
+"""
 # creates txt file with all absolute paths of png files in folder 
 # awaits that main_folder contains subfolders with pngs
 def list_png_paths(folder_path, output_file_path):

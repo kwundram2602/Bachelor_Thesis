@@ -2,6 +2,10 @@ import os
 from sklearn.model_selection import train_test_split
 import argparse
 
+
+"""
+script for test set ( absolute paths of png files in folder)
+"""
 # Erstellt eine Textdatei mit allen absoluten Pfaden der PNG-Dateien im Ordner
 # Erwartet, dass main_folder Unterordner mit PNG-Dateien enthält
 def list_png_paths(folder_path, output_file_path):

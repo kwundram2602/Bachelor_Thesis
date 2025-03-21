@@ -3,6 +3,10 @@ import sys, subprocess, datetime, argparse, math
 import os
 from create_path import create_path
 #import cv2
+
+"""
+functions for splitting videos in batches. and converting them to frame count consistency
+"""
 def convert_to_frame_count_consistency(input_mp4:str,output_mp4:str):
     """
     Converts video so frame count consistency is guaranteed

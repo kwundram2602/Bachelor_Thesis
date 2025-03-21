@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 import os
 
 
+
+"""
+functions for extracting labels from ndjson and writing them to label files
+"""
 def pad_with_zeroes(num_digits, integer):
     return str(integer).zfill(num_digits)
 def get_frame_ids(data):

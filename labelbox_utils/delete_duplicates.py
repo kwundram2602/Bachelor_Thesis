@@ -12,6 +12,7 @@ import os
 import itertools
 import logging
 
+# script for deleting duplicates in labelbox
 def find_duplicates(data):
     external_ids = [entry["data_row"]["external_id"] for entry in data]
     duplicates = set([x for x in external_ids if external_ids.count(x) > 1])

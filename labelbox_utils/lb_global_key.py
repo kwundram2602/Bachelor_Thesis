@@ -3,7 +3,9 @@ import labelbox.types as lb_types
 import uuid
 import json
 
-
+"""
+script for setting global keys for data rows
+"""
 def read_data_row_ids(ndjson):
     """
     Reads Data Row IDs from ndjson file and returns them as a list.
@@ -26,7 +28,6 @@ def read_data_row_ids(ndjson):
     print(ids)
     return ids
             
-    
 def set_global_key(data_row):
     """
     Sets global key for given data row.

@@ -1,7 +1,9 @@
 import os 
 import argparse
 
-
+"""
+helper function. can be used in bash scripts
+"""
 def create_path(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)

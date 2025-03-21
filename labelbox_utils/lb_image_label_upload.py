@@ -18,6 +18,9 @@ import logging
 from lb_label_upload import ( initialize_lbbx_client ,upload_labels_job,
                              read_global_keys,get_datarow_id_by_external_id, get_global_key_by_external_id, get_all_external_ids_from_ndjson, get_unique_external_ids)
 
+"""
+script for uploading image labels to labelbox
+"""
 def create_image_bbox_anno(name:str,top,left,height,width):
     # bbox dim
     bbox_dm = {

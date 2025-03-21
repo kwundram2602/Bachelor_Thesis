@@ -12,7 +12,10 @@ from lb_label_upload import get_datarow_id_by_external_id
 import logging
 import random
 import itertools
+"""
+Uploads images to labelbox in chunks
 
+"""
 def load_ndjson(file_path):
     with open(file_path, 'r') as file:
         return [json.loads(line) for line in file]

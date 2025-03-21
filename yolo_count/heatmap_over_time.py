@@ -6,6 +6,11 @@ import re
 import numpy as np
 from datetime import datetime
 
+
+
+"""
+For creating heatmaps from yolo detections. Also detects and extracts frames if necessary.
+"""
 def create_path(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)

@@ -2,6 +2,10 @@ import cv2
 import matplotlib.pyplot as plt
 import argparse
 
+
+"""
+plot bbox to image. reads bbox from label file
+"""
 def plot_bbox_to_image(image_path:str,label_path:str):
     """
     Plots bounding box from coordinates in label file to image using opencv and matplotlib.
